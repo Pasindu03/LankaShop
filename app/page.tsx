@@ -57,8 +57,11 @@ export default function Home() {
               </Link>
               <Link href="#" className="ml-4">
                 <ShoppingBag size={20} />
+                <img src={"https://img.icons8.com/?size=100&id=Qen4bzysydKM&format=png&color=000000"} />
               </Link>
             </nav>
+
+
 
             {/* Mobile Navigation */}
             <nav className="flex md:hidden justify-between items-center mb-12">
