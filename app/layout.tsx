@@ -2,6 +2,7 @@ import type React from "react"
 import "./globals.css"
 import { Nunito_Sans, Playfair_Display } from "next/font/google"
 import { ThemeProvider } from "@/components/ThemeProvider"
+import Navbar from "@/components/navbar"
 
 // Nunito Sans as an alternative to Avenir
 const nunitoSans = Nunito_Sans({
