@@ -1,11 +1,12 @@
-// components/CheckoutForm.js
+// components/CheckoutForm.tsx
 import React, { useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
 
-const CheckoutForm = () => {
+const CheckoutForm: React.FC = () => {
     const [weight, setWeight] = useState('');
     const [count, setCount] = useState('');
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {  // Type the event parameter
         e.preventDefault();
 
         // Send the weight and count to the API
@@ -17,8 +18,8 @@ const CheckoutForm = () => {
         const session = await response.json();
 
         // Redirect to Stripe Checkout
-        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-        const { error } = await stripe.redirectToCheckout({
+        const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+        const error = await stripe?.redirectToCheckout({
             sessionId: session.id,
         });
         if (error) console.error('Stripe Checkout error', error);
@@ -28,11 +29,22 @@ const CheckoutForm = () => {
         <form onSubmit={handleSubmit}>
             <div>
                 <label>Weight (kg):</label>
-                <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} step="0.01" required />
+                <input
+                    type="number"
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    step="0.01"
+                    required
+                />
             </div>
             <div>
                 <label>Item Count:</label>
-                <input type="number" value={count} onChange={(e) => setCount(e.target.value)} required />
+                <input
+                    type="number"
+                    value={count}
+                    onChange={(e) => setCount(e.target.value)}
+                    required
+                />
             </div>
             <button type="submit">Checkout</button>
         </form>
