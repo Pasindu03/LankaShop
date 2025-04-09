@@ -2,7 +2,7 @@ import type React from "react"
 import "./globals.css"
 import { Nunito_Sans, Playfair_Display } from "next/font/google"
 import { ThemeProvider } from "@/components/ThemeProvider"
-import Navbar from "@/components/navbar"
+import { CartProvider } from "@/context/cart-context"
 
 // Nunito Sans as an alternative to Avenir
 const nunitoSans = Nunito_Sans({
@@ -32,7 +32,7 @@ export default function RootLayout({
         <html lang="en" className={`${nunitoSans.variable} ${playfairDisplay.variable}`}>
         <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="light">
-            {children}
+            <CartProvider>{children}</CartProvider>
         </ThemeProvider>
         </body>
         </html>

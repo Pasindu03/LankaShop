@@ -8,6 +8,7 @@ import Breadcrumb from "@/components/breadcrumb"
 import { ayurvedicProducts, handicraftProducts, spicesProducts, teaProducts } from "@/data/products"
 import type { Product } from "@/types/product"
 import Navbar from "@/components/navbar"
+import { useCart } from "@/context/cart-context"
 
 // Helper function to get category name from product
 const getCategoryInfo = (product: Product) => {
@@ -36,6 +37,7 @@ const getCategoryInfo = (product: Product) => {
 export default function ProductPage() {
     const { slug } = useParams()
     const [quantity, setQuantity] = useState(1)
+    const { addToCart } = useCart()
 
     // Combine all products to find the one with matching slug
     const allProducts = [...ayurvedicProducts, ...handicraftProducts, ...spicesProducts, ...teaProducts]
@@ -61,6 +63,20 @@ export default function ProductPage() {
         if (quantity > 1) {
             setQuantity((prev) => prev - 1)
         }
+    }
+
+    const handleAddToCart = () => {
+        addToCart({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            quantity: quantity,
+            image: product.image || "/placeholder.svg",
+            category: product.category,
+        })
+
+        // You can add a toast notification here if you have a toast library
+        // toast.success(`Added ${quantity} ${product.name} to cart`)
     }
 
     // Render star ratings
@@ -102,7 +118,13 @@ export default function ProductPage() {
                 <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
                     {/* Product Image */}
                     <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden">
-                        <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" priority />
+                        <Image
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.name}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
                     </div>
 
                     {/* Product Details */}
@@ -122,18 +144,27 @@ export default function ProductPage() {
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
                             <div className="flex items-center">
-                                <button onClick={decrementQuantity} className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100">
+                                <button
+                                    onClick={decrementQuantity}
+                                    className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100"
+                                >
                                     <Minus size={16} />
                                 </button>
                                 <div className="px-4 py-2 border-t border-b border-gray-300 min-w-[50px] text-center">{quantity}</div>
-                                <button onClick={incrementQuantity} className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100">
+                                <button
+                                    onClick={incrementQuantity}
+                                    className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100"
+                                >
                                     <Plus size={16} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Add to Cart Button */}
-                        <button className="flex items-center justify-center bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors">
+                        <button
+                            onClick={handleAddToCart}
+                            className="flex items-center justify-center bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors"
+                        >
                             <ShoppingBag size={20} className="mr-2" />
                             Add to Cart
                         </button>
@@ -154,4 +185,3 @@ export default function ProductPage() {
         </main>
     )
 }
-
