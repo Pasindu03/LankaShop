@@ -1,9 +1,11 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Filter, Star, StarHalf, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Filter, ShoppingCart, Star, StarHalf, X } from "lucide-react"
 import type { Product } from "@/types/product"
 import Breadcrumb from "./breadcrumb"
 
@@ -27,6 +29,7 @@ export default function ProductPage({ title, description, products, categories }
   const [selectedRating, setSelectedRating] = useState<number | null>(null)
   const [sortOption, setSortOption] = useState<string>("featured")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [cart, setCart] = useState<Record<string, number>>({})
 
   const productsPerPage = 8
 
@@ -124,14 +127,22 @@ export default function ProductPage({ title, description, products, categories }
     return pathMap[title] || "/"
   }
 
+  const addToCart = (product: Product, event: React.MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setCart((prev) => ({
+      ...prev,
+      [product.id]: (prev[product.id] || 0) + 1,
+    }))
+    // You could add a toast notification here
+    console.log(`Added ${product.name} to cart`)
+  }
+
   return (
       <div className="min-h-screen bg-white">
         {/* Page Header */}
         <div className="bg-gray-100 py-12">
           <div className="container mx-auto px-4">
-            <div className="mb-4">
-              <Breadcrumb items={[{ label: title, href: getBreadcrumbPath(), isCurrent: true }]} />
-            </div>
             <h1 className="text-3xl md:text-4xl font-serif text-center">{title}</h1>
             <p className="text-center text-gray-600 mt-2">{description}</p>
           </div>
@@ -168,6 +179,9 @@ export default function ProductPage({ title, description, products, categories }
             {/* Filters - Desktop */}
             <div className="hidden md:block w-64 flex-shrink-0">
               <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="mb-4">
+                  <Breadcrumb items={[{ label: title, href: getBreadcrumbPath(), isCurrent: true }]} />
+                </div>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="font-medium">Filters</h2>
                   <button onClick={resetFilters} className="text-sm text-gray-500 hover:text-black">
@@ -374,7 +388,7 @@ export default function ProductPage({ title, description, products, categories }
                     {currentProducts.map((product) => (
                         <div
                             key={product.id}
-                            className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                            className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow relative group"
                         >
                           <Link href={`/product/${product.id}`}>
                             <div className="relative h-64">
@@ -384,6 +398,13 @@ export default function ProductPage({ title, description, products, categories }
                                   fill
                                   className="object-cover"
                               />
+                              <button
+                                  onClick={(e) => addToCart(product, e)}
+                                  className="absolute bottom-3 right-3 bg-black text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                  aria-label="Add to cart"
+                              >
+                                <ShoppingCart size={18} />
+                              </button>
                             </div>
                             <div className="p-4">
                               <h3 className="font-medium">{product.name}</h3>
@@ -437,4 +458,3 @@ export default function ProductPage({ title, description, products, categories }
       </div>
   )
 }
-
