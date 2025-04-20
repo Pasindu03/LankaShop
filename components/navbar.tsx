@@ -3,8 +3,9 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import {Menu, User, X} from "lucide-react"
 import ShoppingCart from "./shopping-cart"
+import UserAccount from "./user"
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -47,11 +48,17 @@ export default function Navbar() {
               <div className="ml-4">
                 <ShoppingCart />
               </div>
+              <Link href={"/user"}>
+                <User />
+              </Link>
             </nav>
 
             {/* Mobile Navigation Toggle and Cart */}
             <div className="flex md:hidden items-center space-x-4">
               <ShoppingCart />
+              <Link href={"/user"}>
+                <User size={20}/>
+              </Link>
               <button
                   className="text-sm tracking-wider flex items-center p-2"
                   onClick={toggleMobileMenu}
