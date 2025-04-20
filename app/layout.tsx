@@ -3,6 +3,7 @@ import "./globals.css"
 import { Nunito_Sans, Playfair_Display } from "next/font/google"
 import { ThemeProvider } from "@/components/ThemeProvider"
 import { CartProvider } from "@/context/cart-context"
+import {AuthProvider} from "@/context/auth-context";
 
 // Nunito Sans as an alternative to Avenir
 const nunitoSans = Nunito_Sans({
@@ -32,7 +33,11 @@ export default function RootLayout({
         <html lang="en" className={`${nunitoSans.variable} ${playfairDisplay.variable}`}>
         <body className="font-sans">
         <ThemeProvider attribute="class" defaultTheme="light">
-            <CartProvider>{children}</CartProvider>
+            <CartProvider>
+                <AuthProvider >
+                    {children}
+                </AuthProvider>
+            </CartProvider>
         </ThemeProvider>
         </body>
         </html>

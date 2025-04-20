@@ -3,15 +3,28 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
-import {Menu, User, X} from "lucide-react"
+import { Menu, User, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 import ShoppingCart from "./shopping-cart"
-import UserAccount from "./user"
+import { useAuth } from "@/context/auth-context"
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { isLoggedIn, isLoading } = useAuth()
+  const router = useRouter()
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  // Handle user icon click based on login status
+  const handleUserClick = (e : any) => {
+    e.preventDefault() // Prevent default link behavior
+    if (isLoggedIn) {
+      router.push("/user")
+    } else {
+      router.push("/login")
+    }
   }
 
   return (
@@ -48,17 +61,21 @@ export default function Navbar() {
               <div className="ml-4">
                 <ShoppingCart />
               </div>
-              <Link href={"/user"}>
+              {/* User icon with conditional navigation */}
+              <a href="#" onClick={handleUserClick} className="cursor-pointer">
                 <User />
-              </Link>
+                {/* Optional: Show login status indicator */}
+                <span className="sr-only">{isLoggedIn ? "My Account" : "Login"}</span>
+              </a>
             </nav>
 
             {/* Mobile Navigation Toggle and Cart */}
             <div className="flex md:hidden items-center space-x-4">
               <ShoppingCart />
-              <Link href={"/user"}>
-                <User size={20}/>
-              </Link>
+              {/* Mobile user icon with conditional navigation */}
+              <a href="#" onClick={handleUserClick} className="cursor-pointer">
+                <User size={20} />
+              </a>
               <button
                   className="text-sm tracking-wider flex items-center p-2"
                   onClick={toggleMobileMenu}

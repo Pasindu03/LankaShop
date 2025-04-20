@@ -1,6 +1,8 @@
 // firebaseConfig.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // Your Firebase config object from the Firebase Console
 const firebaseConfig = {
@@ -15,5 +17,10 @@ const firebaseConfig = {
 // Ensure Firebase is initialized only once
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
+// Initialize Firebase Authentication and get a reference to the service
+export const auth = getAuth(app)
+
 // Export instances for Firestore or any other Firebase service you need
 export const db = getFirestore(app);
+
+export const storage = getStorage(app)

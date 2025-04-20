@@ -1,11 +1,14 @@
+"use client"
+
 import User from '@/components/user';
 import React from 'react';
+import ProtectedRoute from "@/components/protected-route";
 
 const Page = () => {
     return (
-        <main>
+        <ProtectedRoute>
             <User />
-        </main>
+        </ProtectedRoute>
     );
 };
 

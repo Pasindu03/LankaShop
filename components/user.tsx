@@ -1,7 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit, MoveLeft } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
+import { db, storage } from "@/lib/firebase"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -12,17 +16,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import Link from "next/link";
 
-export default function User() {
+export default function UserAccount() {
+    const { currentUser } = useAuth()
+    const [isLoading, setIsLoading] = useState(true)
+
+    // Customer data with state
     const [customer, setCustomer] = useState({
-        id: "CUST-12345",
-        name: "Alex Johnson",
-        email: "alex.johnson@example.com",
-        phone: "+1 (555) 123-4567",
-        address: "123 Main Street, Apt 4B, New York, NY 10001",
+        id: "",
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
         avatarUrl: "/placeholder.svg?height=80&width=80",
-        memberSince: "April 2025",
+        memberSince: "",
     })
 
     // State for editing mode
@@ -33,55 +40,182 @@ export default function User() {
     const [avatarFile, setAvatarFile] = useState(null)
     const [avatarPreview, setAvatarPreview] = useState(customer.avatarUrl)
 
-    // Mock current orders
-    const currentOrders = [
-        {
-            id: "ORD-9876",
-            date: "June 15, 2023",
-            status: "Processing",
-            items: [
-                { name: "Wireless Headphones", quantity: 1, price: 129.99 },
-                { name: "Phone Case", quantity: 1, price: 24.99 },
-            ],
-            total: 154.98,
-            estimatedDelivery: "June 20, 2023",
-        },
-    ]
+    // Orders state
+    const [currentOrders, setCurrentOrders] = useState([])
+    const [orderHistory, setOrderHistory] = useState([])
+    const [totalSpent, setTotalSpent] = useState(0)
 
-    // Mock order history
-    const orderHistory = [
-        {
-            id: "ORD-8765",
-            date: "May 28, 2023",
-            status: "Delivered",
-            items: [{ name: "Smart Watch", quantity: 1, price: 249.99 }],
-            total: 249.99,
-        },
-        {
-            id: "ORD-7654",
-            date: "April 15, 2023",
-            status: "Delivered",
-            items: [
-                { name: "Bluetooth Speaker", quantity: 1, price: 79.99 },
-                { name: "USB-C Cable", quantity: 2, price: 19.98 },
-            ],
-            total: 99.97,
-        },
-        {
-            id: "ORD-6543",
-            date: "March 2, 2023",
-            status: "Delivered",
-            items: [
-                { name: "Laptop Sleeve", quantity: 1, price: 39.99 },
-                { name: "Wireless Mouse", quantity: 1, price: 49.99 },
-                { name: "HDMI Adapter", quantity: 1, price: 29.99 },
-            ],
-            total: 119.97,
-        },
-    ]
+    // Fetch user data from Firestore
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!currentUser) return
 
-    // Calculate total spent
-    const totalSpent = [...currentOrders, ...orderHistory].reduce((sum, order) => sum + order.total, 0)
+            try {
+                setIsLoading(true)
+
+                // Get user profile from Firestore
+                const userRef = doc(db, "users", currentUser.uid)
+                const userSnap = await getDoc(userRef)
+
+                if (userSnap.exists()) {
+                    const userData = userSnap.data()
+
+                    // Format the timestamp to a readable date
+                    const memberSince = userData.createdAt
+                        ? new Date(userData.createdAt.toDate()).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+                        : new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })
+
+                    setCustomer({
+                        id: `CUST-${currentUser.uid.substring(0, 5)}`,
+                        name: userData.name || currentUser.displayName || "User",
+                        email: userData.email || currentUser.email || "",
+                        phone: userData.phone || "",
+                        address: userData.address || "",
+                        avatarUrl: userData.avatarUrl || currentUser.photoURL || "/placeholder.svg?height=80&width=80",
+                        memberSince,
+                    })
+
+                    setAvatarPreview(userData.avatarUrl || currentUser.photoURL || "/placeholder.svg?height=80&width=80")
+                } else {
+                    // Create a new user document if it doesn't exist
+                    const newUser = {
+                        name: currentUser.displayName || "User",
+                        email: currentUser.email || "",
+                        phone: "",
+                        address: "",
+                        avatarUrl: currentUser.photoURL || "/placeholder.svg?height=80&width=80",
+                        createdAt: new Date(),
+                    }
+
+                    await updateDoc(userRef, newUser)
+
+                    setCustomer({
+                        id: `CUST-${currentUser.uid.substring(0, 5)}`,
+                        ...newUser,
+                        memberSince: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+                    })
+
+                    setAvatarPreview(currentUser.photoURL || "/placeholder.svg?height=80&width=80")
+                }
+
+                // Initialize form values
+                setFormValues({
+                    id: `CUST-${currentUser.uid.substring(0, 5)}`,
+                    name: customer.name,
+                    email: customer.email,
+                    phone: customer.phone,
+                    address: customer.address,
+                    avatarUrl: customer.avatarUrl,
+                    memberSince: customer.memberSince,
+                })
+
+                // Fetch orders
+                await fetchOrders()
+            } catch (error) {
+                console.error("Error fetching user data:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchUserData()
+    }, [currentUser])
+
+    // Fetch orders from Firestore
+    const fetchOrders = async () => {
+        if (!currentUser) return
+
+        try {
+            // Get current orders (status is not "Delivered")
+            const currentOrdersQuery = query(
+                collection(db, "orders"),
+                where("userId", "==", currentUser.uid),
+                where("status", "!=", "Delivered"),
+                orderBy("status"),
+                orderBy("date", "desc"),
+            )
+
+            const currentOrdersSnapshot = await getDocs(currentOrdersQuery)
+            const currentOrdersData = currentOrdersSnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+
+            setCurrentOrders(
+                currentOrdersData.length > 0
+                    ? currentOrdersData
+                    : [
+                        {
+                            id: "ORD-9876",
+                            date: "June 15, 2023",
+                            status: "Processing",
+                            items: [
+                                { name: "Wireless Headphones", quantity: 1, price: 129.99 },
+                                { name: "Phone Case", quantity: 1, price: 24.99 },
+                            ],
+                            total: 154.98,
+                            estimatedDelivery: "June 20, 2023",
+                        },
+                    ],
+            )
+
+            // Get order history (status is "Delivered")
+            const historyOrdersQuery = query(
+                collection(db, "orders"),
+                where("userId", "==", currentUser.uid),
+                where("status", "==", "Delivered"),
+                orderBy("date", "desc"),
+            )
+
+            const historyOrdersSnapshot = await getDocs(historyOrdersQuery)
+            const historyOrdersData = historyOrdersSnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+
+            setOrderHistory(
+                historyOrdersData.length > 0
+                    ? historyOrdersData
+                    : [
+                        {
+                            id: "ORD-8765",
+                            date: "May 28, 2023",
+                            status: "Delivered",
+                            items: [{ name: "Smart Watch", quantity: 1, price: 249.99 }],
+                            total: 249.99,
+                        },
+                        {
+                            id: "ORD-7654",
+                            date: "April 15, 2023",
+                            status: "Delivered",
+                            items: [
+                                { name: "Bluetooth Speaker", quantity: 1, price: 79.99 },
+                                { name: "USB-C Cable", quantity: 2, price: 19.98 },
+                            ],
+                            total: 99.97,
+                        },
+                        {
+                            id: "ORD-6543",
+                            date: "March 2, 2023",
+                            status: "Delivered",
+                            items: [
+                                { name: "Laptop Sleeve", quantity: 1, price: 39.99 },
+                                { name: "Wireless Mouse", quantity: 1, price: 49.99 },
+                                { name: "HDMI Adapter", quantity: 1, price: 29.99 },
+                            ],
+                            total: 119.97,
+                        },
+                    ],
+            )
+
+            // Calculate total spent
+            const allOrders = [...currentOrdersData, ...historyOrdersData]
+            const total = allOrders.reduce((sum, order) => sum + (order.total || 0), 0)
+            setTotalSpent(total || [...currentOrders, ...orderHistory].reduce((sum, order) => sum + order.total, 0))
+        } catch (error) {
+            console.error("Error fetching orders:", error)
+        }
+    }
 
     // Handle input changes
     const handleInputChange = (e) => {
@@ -106,13 +240,43 @@ export default function User() {
     }
 
     // Handle form submission
-    const handleSubmit = () => {
-        setCustomer({
-            ...customer,
-            ...formValues,
-            avatarUrl: avatarPreview,
-        })
-        setIsEditing(false)
+    const handleSubmit = async () => {
+        if (!currentUser) return
+
+        try {
+            setIsLoading(true)
+
+            // Upload avatar if changed
+            let avatarUrl = customer.avatarUrl
+            if (avatarFile) {
+                const storageRef = ref(storage, `avatars/${currentUser.uid}`)
+                await uploadBytes(storageRef, avatarFile)
+                avatarUrl = await getDownloadURL(storageRef)
+            }
+
+            // Update user document in Firestore
+            const userRef = doc(db, "users", currentUser.uid)
+            await updateDoc(userRef, {
+                name: formValues.name,
+                email: formValues.email,
+                phone: formValues.phone,
+                address: formValues.address,
+                avatarUrl,
+            })
+
+            // Update local state
+            setCustomer({
+                ...customer,
+                ...formValues,
+                avatarUrl,
+            })
+
+            setIsEditing(false)
+        } catch (error) {
+            console.error("Error updating profile:", error)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     // Cancel editing
@@ -123,14 +287,20 @@ export default function User() {
         setIsEditing(false)
     }
 
+    if (isLoading) {
+        return (
+            <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[60vh]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p>Loading your account information...</p>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="container mx-auto py-8 px-4">
-            <div className="flex justify-between">
-                <Link href={"/"}>
-                    <MoveLeft />
-                </Link>
-                <h1 className="text-3xl font-bold mb-6">My Account</h1>
-            </div>
+            <h1 className="text-3xl font-bold mb-6">My Account</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Customer Profile Section */}
@@ -179,7 +349,19 @@ export default function User() {
 
                                     <div className="space-y-1">
                                         <Label htmlFor="email">Email</Label>
-                                        <Input disabled={true} id="email" name="email" type="email" value={formValues.email} onChange={handleInputChange} />
+                                        <Input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            value={formValues.email}
+                                            onChange={handleInputChange}
+                                            disabled={currentUser?.providerData[0]?.providerId === "password"}
+                                        />
+                                        {currentUser?.providerData[0]?.providerId === "password" && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Email cannot be changed for email/password accounts
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="space-y-1">
@@ -200,11 +382,20 @@ export default function User() {
                                 </div>
 
                                 <div className="flex gap-2 mt-4">
-                                    <Button onClick={handleSubmit} className="flex-1">
-                                        <Check className="h-4 w-4 mr-2" />
-                                        Save Changes
+                                    <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
+                                        {isLoading ? (
+                                            <span className="flex items-center">
+                        <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
+                        Saving...
+                      </span>
+                                        ) : (
+                                            <>
+                                                <Check className="h-4 w-4 mr-2" />
+                                                Save Changes
+                                            </>
+                                        )}
                                     </Button>
-                                    <Button variant="outline" onClick={handleCancel} className="flex-1">
+                                    <Button variant="outline" onClick={handleCancel} className="flex-1" disabled={isLoading}>
                                         <X className="h-4 w-4 mr-2" />
                                         Cancel
                                     </Button>
@@ -243,7 +434,7 @@ export default function User() {
                                         <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <p className="text-sm font-medium">Phone</p>
-                                            <p className="text-sm text-muted-foreground">{customer.phone}</p>
+                                            <p className="text-sm text-muted-foreground">{customer.phone || "Not provided"}</p>
                                         </div>
                                     </div>
 
@@ -251,7 +442,7 @@ export default function User() {
                                         <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                                         <div>
                                             <p className="text-sm font-medium">Shipping Address</p>
-                                            <p className="text-sm text-muted-foreground">{customer.address}</p>
+                                            <p className="text-sm text-muted-foreground">{customer.address || "Not provided"}</p>
                                         </div>
                                     </div>
                                 </div>
