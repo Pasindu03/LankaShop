@@ -59,6 +59,14 @@ export const metadata = {
             },
         ],
     },
+    twitter: {
+        card: "summary_large_image",
+        title: "Lanka Shop | Authentic Sri Lankan Products in the UK",
+        description:
+            "Discover authentic Sri Lankan products including Ayurvedic remedies, handicrafts, premium spices, and Ceylon tea.",
+        images: ["https://lankashop.co.uk/twitter-image.jpg"], // You'll need to create this image
+        creator: "@lankashop", // Replace with your Twitter handle if you have one
+    },
     robots: {
         index: true,
         follow: true,
@@ -76,11 +84,24 @@ export const metadata = {
         },
     },
     verification: {
-        // Add your verification codes if you have them
         google: "google-site-verification-code",
-        // yandex: "yandex-verification-code",
-        // bing: "bing-verification-code",
     },
+    icons: {
+        icon: [
+            { url: "/favicon.ico" },
+            { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+            { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        ],
+        apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+        other: [
+            {
+                rel: "mask-icon",
+                url: "/safari-pinned-tab.svg",
+                color: "#5bbad5",
+            },
+        ],
+    },
+    manifest: "/site.webmanifest",
 }
 
 export default function RootLayout({
