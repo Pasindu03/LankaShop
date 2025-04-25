@@ -5,12 +5,16 @@ import Image from "next/image"
 import { useParams } from "next/navigation"
 import { Minus, Plus, ShoppingBag, Star, StarHalf } from "lucide-react"
 import Breadcrumb from "@/components/breadcrumb"
-import { ayurvedicProducts, handicraftProducts, spicesProducts, teaProducts } from "@/data/products"
+import {
+    ayurvedicProducts,
+    handicraftProducts,
+    spicesProducts,
+    teaProducts,
+} from "@/data/products"
 import type { Product } from "@/types/product"
 import Navbar from "@/components/navbar"
 import { useCart } from "@/context/cart-context"
 
-// Helper function to get category name from product
 const getCategoryInfo = (product: Product) => {
     const categoryMap: Record<string, { name: string; path: string }> = {
         herbs: { name: "Ayurvedic", path: "/ayurveda" },
@@ -30,7 +34,6 @@ const getCategoryInfo = (product: Product) => {
         white: { name: "Ceylon Tea", path: "/tea" },
         herbal: { name: "Ceylon Tea", path: "/tea" },
     }
-
     return categoryMap[product.category] || { name: "Products", path: "/" }
 }
 
@@ -39,9 +42,12 @@ export default function ProductPage() {
     const [quantity, setQuantity] = useState(1)
     const { addToCart } = useCart()
 
-    // Combine all products to find the one with matching slug
-    const allProducts = [...ayurvedicProducts, ...handicraftProducts, ...spicesProducts, ...teaProducts]
-
+    const allProducts = [
+        ...ayurvedicProducts,
+        ...handicraftProducts,
+        ...spicesProducts,
+        ...teaProducts,
+    ]
     const product = allProducts.find((p) => p.id === slug)
 
     if (!product) {
@@ -55,49 +61,51 @@ export default function ProductPage() {
 
     const categoryInfo = getCategoryInfo(product)
 
-    const incrementQuantity = () => {
-        setQuantity((prev) => prev + 1)
-    }
-
-    const decrementQuantity = () => {
-        if (quantity > 1) {
-            setQuantity((prev) => prev - 1)
-        }
-    }
+    const incrementQuantity = () => setQuantity((q) => q + 1)
+    const decrementQuantity = () => setQuantity((q) => Math.max(1, q - 1))
 
     const handleAddToCart = () => {
+        console.log("🏷️ ProductPage.handleAddToCart – quantity:", quantity)
         addToCart({
             id: product.id,
             name: product.name,
             price: product.price,
-            quantity: quantity,
+            quantity,
             image: product.image || "/placeholder.svg",
             category: product.category,
         })
-
-        // You can add a toast notification here if you have a toast library
-        // toast.success(`Added ${quantity} ${product.name} to cart`)
+        setQuantity(1)
     }
 
-    // Render star ratings
     const renderRating = (rating: number) => {
         const stars = []
         const fullStars = Math.floor(rating)
-        const hasHalfStar = rating % 1 >= 0.5
+        const hasHalf = rating % 1 >= 0.5
 
         for (let i = 0; i < fullStars; i++) {
-            stars.push(<Star key={`star-${i}`} className="fill-current text-yellow-400" size={16} />)
+            stars.push(
+                <Star
+                    key={`star-${i}`}
+                    className="fill-current text-yellow-400"
+                    size={16}
+                />
+            )
         }
-
-        if (hasHalfStar) {
-            stars.push(<StarHalf key="half-star" className="fill-current text-yellow-400" size={16} />)
+        if (hasHalf) {
+            stars.push(
+                <StarHalf
+                    key="half-star"
+                    className="fill-current text-yellow-400"
+                    size={16}
+                />
+            )
         }
-
-        const emptyStars = 5 - stars.length
-        for (let i = 0; i < emptyStars; i++) {
-            stars.push(<Star key={`empty-star-${i}`} className="text-gray-300" size={16} />)
+        const empty = 5 - stars.length
+        for (let i = 0; i < empty; i++) {
+            stars.push(
+                <Star key={`empty-star-${i}`} className="text-gray-300" size={16} />
+            )
         }
-
         return stars
     }
 
@@ -110,13 +118,17 @@ export default function ProductPage() {
                     <Breadcrumb
                         items={[
                             { label: categoryInfo.name, href: categoryInfo.path },
-                            { label: product.name, href: `/product/${product.id}`, isCurrent: true },
+                            {
+                                label: product.name,
+                                href: `/product/${product.id}`,
+                                isCurrent: true,
+                            },
                         ]}
                     />
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-                    {/* Product Image */}
+                    {/* Image */}
                     <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden">
                         <Image
                             src={product.image || "/placeholder.svg"}
@@ -127,40 +139,49 @@ export default function ProductPage() {
                         />
                     </div>
 
-                    {/* Product Details */}
+                    {/* Details */}
                     <div className="flex flex-col">
                         <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
 
                         <div className="flex items-center mt-2 mb-4">
                             <div className="flex mr-2">{renderRating(product.rating)}</div>
-                            <span className="text-sm text-gray-500">({product.reviews} reviews)</span>
+                            <span className="text-sm text-gray-500">
+                ({product.reviews} reviews)
+              </span>
                         </div>
 
-                        <div className="text-2xl font-bold mb-6">£{product.price.toFixed(2)}</div>
-
+                        <div className="text-2xl font-bold mb-6">
+                            £{product.price.toFixed(2)}
+                        </div>
                         <p className="text-gray-600 mb-8">{product.description}</p>
 
-                        {/* Quantity Selector */}
+                        {/* Quantity */}
                         <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Quantity
+                            </label>
                             <div className="flex items-center">
                                 <button
                                     onClick={decrementQuantity}
                                     className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100"
+                                    aria-label="Decrease quantity"
                                 >
                                     <Minus size={16} />
                                 </button>
-                                <div className="px-4 py-2 border-t border-b border-gray-300 min-w-[50px] text-center">{quantity}</div>
+                                <div className="px-4 py-2 border-t border-b border-gray-300 min-w-[50px] text-center">
+                                    {quantity}
+                                </div>
                                 <button
                                     onClick={incrementQuantity}
                                     className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100"
+                                    aria-label="Increase quantity"
                                 >
                                     <Plus size={16} />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Add to Cart Button */}
+                        {/* Add to Cart */}
                         <button
                             onClick={handleAddToCart}
                             className="flex items-center justify-center bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors"
@@ -169,7 +190,7 @@ export default function ProductPage() {
                             Add to Cart
                         </button>
 
-                        {/* Additional Info */}
+                        {/* Extra Details */}
                         <div className="mt-8 pt-8 border-t border-gray-200">
                             <h2 className="text-lg font-semibold mb-4">Product Details</h2>
                             <ul className="list-disc pl-5 space-y-2 text-gray-600">

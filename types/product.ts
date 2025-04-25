@@ -4,6 +4,7 @@ export type Product = {
   price: number
   image: string
   category: string
+  mainCategory: "ayurvedic" | "handicraft" | "spices" | "tea";
   rating: number
   reviews: number
   date: string
