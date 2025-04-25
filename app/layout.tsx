@@ -84,7 +84,7 @@ export const metadata = {
         },
     },
     verification: {
-        google: "google-site-verification-code",
+        google: "APGjbAgisZCr_TfS3x-0-BmLslCSbFPbuMt2DHKNMZw",
     },
     icons: {
         icon: [
