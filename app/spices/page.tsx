@@ -1,23 +1,23 @@
 import ProductPage from "@/components/product-page"
-import { spicesProducts } from "@/data/products"
-import Navbar from "@/components/navbar";
+import { handicraftProducts } from "@/data/products"
+import Navbar from "@/components/navbar"
 
 export default function Page() {
     return (
         <main>
             <Navbar />
             <ProductPage
-                title="Spices"
-                description="Premium quality spices from Sri Lanka"
-                products={spicesProducts}
+                title="Handicraft Products"
+                description="Handmade crafts with traditional techniques"
+                products={handicraftProducts}
+                heroImage="https://images.pexels.com/photos/1340116/pexels-photo-1340116.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
                 categories={[
-                    { id: "cinnamon", name: "Cinnamon" },
-                    { id: "cardamom", name: "Cardamom" },
-                    { id: "cloves", name: "Cloves" },
-                    { id: "pepper", name: "Pepper" },
+                    { id: "masks", name: "Masks" },
+                    { id: "textiles", name: "Textiles" },
+                    { id: "woodwork", name: "Woodwork" },
+                    { id: "jewelry", name: "Jewelry" },
                 ]}
             />
         </main>
     )
 }
-

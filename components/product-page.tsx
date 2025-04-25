@@ -19,9 +19,10 @@ type ProductPageProps = {
   description: string
   products: Product[]
   categories: Category[]
+  heroImage?: string
 }
 
-export default function ProductPage({ title, description, products, categories }: ProductPageProps) {
+export default function ProductPage({ title, description, products, categories, heroImage }: ProductPageProps) {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
   const [currentPage, setCurrentPage] = useState(1)
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100])
@@ -144,8 +145,8 @@ export default function ProductPage({ title, description, products, categories }
         <div className="relative">
           <div className="w-full h-64 md:h-80 relative">
             <Image
-                src="/placeholder.svg?height=800&width=1920"
-                alt="Product category hero image"
+                src={heroImage || "/placeholder.svg?height=800&width=1920"}
+                alt={`${title} category hero image`}
                 fill
                 className="object-cover"
                 priority
