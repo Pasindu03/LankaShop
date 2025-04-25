@@ -1,19 +1,63 @@
 import Link from "next/link"
 import Image from "next/image"
-import {Facebook, Instagram} from "lucide-react";
-import React from "react";
-import Navbar from "@/components/navbar";
+import { Facebook, Instagram } from "lucide-react"
+import Navbar from "@/components/navbar"
+import { JsonLd } from "@/components/json-ld"
+
+export const metadata = {
+  title: "Authentic Sri Lankan Products in the UK | Lanka Shop",
+  description:
+      "Discover authentic Sri Lankan products including Ayurvedic remedies, handicrafts, premium spices, and Ceylon tea. Official UK distributor with Sri Lankan authorizations.",
+  alternates: {
+    canonical: "https://lankashop.co.uk",
+  },
+}
 
 export default function Home() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: "Lanka Shop",
+    description:
+        "Authentic Sri Lankan products in the UK including Ayurvedic remedies, handicrafts, spices, and Ceylon tea.",
+    url: "https://lankashop.co.uk",
+    telephone: "+44XXXXXXXXXX", // Replace with your actual phone number
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Your Street Address", // Replace with your actual address
+      addressLocality: "Your City",
+      postalCode: "Your Postal Code",
+      addressCountry: "GB",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 51.5074, // Replace with your actual coordinates
+      longitude: -0.1278,
+    },
+    openingHours: "Mo-Fr 09:00-17:00", // Replace with your actual hours
+    priceRange: "££",
+    image: "https://lankashop.co.uk/og-image.jpg", // Replace with your actual image
+    sameAs: [
+      "https://www.facebook.com/lankashop", // Replace with your actual social links
+      "https://www.instagram.com/lankashop",
+    ],
+    potentialAction: {
+      "@type": "SearchAction",
+      target: "https://lankashop.co.uk/search?q={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  }
+
   return (
       <main className="min-h-screen bg-white">
+        <JsonLd data={structuredData} />
         <Navbar />
 
         {/* Hero Image Section - Full width, responsive height */}
         <section className="w-full h-[calc(100vh-80px)] md:h-[600px] lg:h-[800px] relative">
           <Image
               src="https://img.freepik.com/premium-photo/close-up-abandoned-statue-by-leaves_1048944-11809102.jpg?w=900"
-              alt="Hero Image"
+              alt="Authentic Sri Lankan products showcase - traditional statues and artifacts"
               fill
               priority
               className="object-cover"
@@ -44,7 +88,7 @@ export default function Home() {
                 <div className="h-64 relative">
                   <Image
                       src="https://images.pexels.com/photos/8940745/pexels-photo-8940745.jpeg?height=400&width=400"
-                      alt="Product 1"
+                      alt="Ayurvedic Products from Sri Lanka - natural remedies and wellness items"
                       fill
                       className="object-cover"
                   />
@@ -63,7 +107,7 @@ export default function Home() {
                 <div className="h-64 relative">
                   <Image
                       src="https://images.pexels.com/photos/2113125/pexels-photo-2113125.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                      alt="Product 2"
+                      alt="Sri Lankan Handicrafts - handmade traditional crafts and decorative items"
                       fill
                       className="object-cover"
                   />
@@ -82,7 +126,7 @@ export default function Home() {
                 <div className="h-64 relative">
                   <Image
                       src="https://images.pexels.com/photos/2632292/pexels-photo-2632292.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                      alt="Product 3"
+                      alt="Premium Sri Lankan Spices - authentic spices and seasonings"
                       fill
                       className="object-cover"
                   />
@@ -101,7 +145,7 @@ export default function Home() {
                 <div className="h-64 relative">
                   <Image
                       src="https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-                      alt="Product 4"
+                      alt="Ceylon Tea from Sri Lanka - premium tea varieties from the highlands"
                       fill
                       className="object-cover"
                   />
@@ -122,16 +166,16 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="mb-6 md:mb-0">
-                <Image src="/lankaShop.jpeg" alt="Lanka Shop" width={80} height={80} className="object-contain" />
+                <Image src="/lankaShop.jpeg" alt="Lanka Shop Logo" width={80} height={80} className="object-contain" />
               </div>
               <div className="text-center md:text-left mb-6 md:mb-0">
                 <p className="text-sm">© {new Date().getFullYear()} Lanka Shop. All rights reserved.</p>
               </div>
               <div className="flex space-x-6">
-                <Link href="#" aria-label="Facebook">
+                <Link href="#" aria-label="Follow Lanka Shop on Facebook">
                   <Facebook size={24} />
                 </Link>
-                <Link href="#" aria-label="Instagram">
+                <Link href="#" aria-label="Follow Lanka Shop on Instagram">
                   <Instagram size={24} />
                 </Link>
               </div>
@@ -141,4 +185,3 @@ export default function Home() {
       </main>
   )
 }
-
