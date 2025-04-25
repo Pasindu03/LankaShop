@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit } from "lucide-react"
+import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
@@ -20,6 +20,8 @@ import { Textarea } from "@/components/ui/textarea"
 export default function UserAccount() {
     const { currentUser } = useAuth()
     const [isLoading, setIsLoading] = useState(true)
+    const [isProfileLoading, setIsProfileLoading] = useState(true)
+    const [isOrdersLoading, setIsOrdersLoading] = useState(true)
 
     // Customer data with state
     const [customer, setCustomer] = useState({
@@ -51,7 +53,7 @@ export default function UserAccount() {
             if (!currentUser) return
 
             try {
-                setIsLoading(true)
+                setIsProfileLoading(true)
 
                 // Get user profile from Firestore
                 const userRef = doc(db, "users", currentUser.uid)
@@ -114,7 +116,7 @@ export default function UserAccount() {
             } catch (error) {
                 console.error("Error fetching user data:", error)
             } finally {
-                setIsLoading(false)
+                setIsProfileLoading(false)
             }
         }
 
@@ -126,6 +128,8 @@ export default function UserAccount() {
         if (!currentUser) return
 
         try {
+            setIsOrdersLoading(true)
+
             // Get current orders (status is not "Delivered")
             const currentOrdersQuery = query(
                 collection(db, "orders"),
@@ -141,23 +145,7 @@ export default function UserAccount() {
                 ...doc.data(),
             }))
 
-            setCurrentOrders(
-                currentOrdersData.length > 0
-                    ? currentOrdersData
-                    : [
-                        {
-                            id: "ORD-9876",
-                            date: "June 15, 2023",
-                            status: "Processing",
-                            items: [
-                                { name: "Wireless Headphones", quantity: 1, price: 129.99 },
-                                { name: "Phone Case", quantity: 1, price: 24.99 },
-                            ],
-                            total: 154.98,
-                            estimatedDelivery: "June 20, 2023",
-                        },
-                    ],
-            )
+            setCurrentOrders(currentOrdersData.length > 0 ? currentOrdersData : [])
 
             // Get order history (status is "Delivered")
             const historyOrdersQuery = query(
@@ -173,40 +161,7 @@ export default function UserAccount() {
                 ...doc.data(),
             }))
 
-            setOrderHistory(
-                historyOrdersData.length > 0
-                    ? historyOrdersData
-                    : [
-                        {
-                            id: "ORD-8765",
-                            date: "May 28, 2023",
-                            status: "Delivered",
-                            items: [{ name: "Smart Watch", quantity: 1, price: 249.99 }],
-                            total: 249.99,
-                        },
-                        {
-                            id: "ORD-7654",
-                            date: "April 15, 2023",
-                            status: "Delivered",
-                            items: [
-                                { name: "Bluetooth Speaker", quantity: 1, price: 79.99 },
-                                { name: "USB-C Cable", quantity: 2, price: 19.98 },
-                            ],
-                            total: 99.97,
-                        },
-                        {
-                            id: "ORD-6543",
-                            date: "March 2, 2023",
-                            status: "Delivered",
-                            items: [
-                                { name: "Laptop Sleeve", quantity: 1, price: 39.99 },
-                                { name: "Wireless Mouse", quantity: 1, price: 49.99 },
-                                { name: "HDMI Adapter", quantity: 1, price: 29.99 },
-                            ],
-                            total: 119.97,
-                        },
-                    ],
-            )
+            setOrderHistory(historyOrdersData.length > 0 ? historyOrdersData : [])
 
             // Calculate total spent
             const allOrders = [...currentOrdersData, ...historyOrdersData]
@@ -214,6 +169,9 @@ export default function UserAccount() {
             setTotalSpent(total || [...currentOrders, ...orderHistory].reduce((sum, order) => sum + order.total, 0))
         } catch (error) {
             console.error("Error fetching orders:", error)
+        } finally {
+            setIsOrdersLoading(false)
+            setIsLoading(false) // Set the main loading state to false when both operations are complete
         }
     }
 
@@ -287,11 +245,11 @@ export default function UserAccount() {
         setIsEditing(false)
     }
 
-    if (isLoading) {
+    if (isLoading || isProfileLoading || isOrdersLoading) {
         return (
             <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
                     <p>Loading your account information...</p>
                 </div>
             </div>
@@ -385,7 +343,7 @@ export default function UserAccount() {
                                     <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
                                         {isLoading ? (
                                             <span className="flex items-center">
-                        <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Saving...
                       </span>
                                         ) : (

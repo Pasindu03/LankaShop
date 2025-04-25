@@ -1,26 +1,26 @@
-// /app/api/create-checkout-session/route.js
-
 import Stripe from "stripe";
 
-// Initialize Stripe with your secret key (ensure you load from env variable)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2022-11-15", // Adjust to your preferred version
-});
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not set in the environment variables.");
+}
 
-export async function POST(request) {
+const stripe = new Stripe(stripeSecretKey, {apiVersion: "2025-03-31.basil",});
+
+export async function POST(request : any) {
     try {
         // Parse the incoming JSON request body
         const { cartItems, subtotal } = await request.json();
 
         // Map your cart items to Stripe's expected line items format
-        const line_items = cartItems.map((item) => ({
+        const line_items = cartItems.map((item : any) => ({
             price_data: {
                 currency: "GBP", // Adjust currency if needed
                 product_data: {
                     name: item.name,
                     images: item.image ? [item.image] : undefined,
                 },
-                unit_amount: Math.round(item.price * 100), // Unit amount in the smallest currency unit (e.g., pence)
+                unit_amount: Math.round(item.price * 100),
             },
             quantity: item.quantity,
         }));
@@ -39,7 +39,7 @@ export async function POST(request) {
             status: 200,
             headers: { "Content-Type": "application/json" },
         });
-    } catch (err) {
+    } catch (err : any) {
         // Handle errors
         return new Response(JSON.stringify({ error: err.message }), {
             status: 500,

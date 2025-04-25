@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import type React from "react"
+
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/context/auth-context"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -16,17 +18,26 @@ export default function LoginPage() {
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const [isLoading, setIsLoading] = useState(false)
-    const { login, loginWithGoogle } = useAuth()
+    const { login, loginWithGoogle, isLoggedIn } = useAuth()
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const from = searchParams.get("from") || "/user"
 
-    const handleLogin = async (e : any) => {
+    // Redirect if already logged in
+    useEffect(() => {
+        if (isLoggedIn) {
+            router.push(from)
+        }
+    }, [isLoggedIn, router, from])
+
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
         setIsLoading(true)
 
         try {
             await login(email, password)
-            router.push("/user")
+            router.push(from)
         } catch (error) {
             setError("Failed to log in. Please check your credentials.")
             console.error(error)
@@ -41,7 +52,7 @@ export default function LoginPage() {
 
         try {
             await loginWithGoogle()
-            router.push("/user")
+            router.push(from)
         } catch (error) {
             setError("Failed to log in with Google.")
             console.error(error)
@@ -76,12 +87,6 @@ export default function LoginPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="password">Password</Label>
-                                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                                    Forgot password?
-                                </Link>
-                            </div>
                             <Input
                                 id="password"
                                 type="password"
@@ -111,7 +116,7 @@ export default function LoginPage() {
                 </CardContent>
                 <CardFooter className="flex justify-center">
                     <p className="text-sm text-gray-600">
-                        Don't have an account?{" "}
+                        Do not have an account?{" "}
                         <Link href="/signup" className="text-primary hover:underline">
                             Sign up
                         </Link>
