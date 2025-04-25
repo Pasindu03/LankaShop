@@ -140,11 +140,20 @@ export default function ProductPage({ title, description, products, categories }
 
   return (
       <div className="min-h-screen bg-white">
-        {/* Page Header */}
-        <div className="bg-gray-100 py-12">
-          <div className="container mx-auto px-4">
-            <h1 className="text-3xl md:text-4xl font-serif text-center">{title}</h1>
-            <p className="text-center text-gray-600 mt-2">{description}</p>
+        {/* Page Header with Hero Image */}
+        <div className="relative">
+          <div className="w-full h-64 md:h-80 relative">
+            <Image
+                src="/placeholder.svg?height=800&width=1920"
+                alt="Product category hero image"
+                fill
+                className="object-cover"
+                priority
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center">
+              <h1 className="text-3xl md:text-4xl font-serif text-center text-white">{title}</h1>
+              <p className="text-center text-gray-200 mt-2">{description}</p>
+            </div>
           </div>
         </div>
 
