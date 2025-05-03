@@ -3,11 +3,11 @@ export type Product = {
   name: string
   price: number
   image: string
-  category: string
-  mainCategory: "ayurvedic" | "handicraft" | "spices" | "tea";
+  categoryId: string
   rating: number
   reviews: number
   date: string
   description: string
+  stock: number
+  tagIds: string[]
 }
-

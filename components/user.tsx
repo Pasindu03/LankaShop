@@ -32,11 +32,8 @@ export default function UserAccount() {
         memberSince: "",
     })
 
-    // State for editing mode
     const [isEditing, setIsEditing] = useState(false)
-    // Temporary state for form values
     const [formValues, setFormValues] = useState({ ...customer })
-    // State for avatar upload
     const [avatarFile, setAvatarFile] = useState(null)
     const [avatarPreview, setAvatarPreview] = useState(customer.avatarUrl)
 
@@ -53,6 +50,10 @@ export default function UserAccount() {
             try {
                 setIsLoading(true)
 
+                console.log("Current user object:", currentUser)
+                console.log("Display name:", currentUser.displayName)
+                console.log("Email:", currentUser.email)
+                console.log("Photo URL:", currentUser.photoURL)
                 // Get user profile from Firestore
                 const userRef = doc(db, "users", currentUser.uid)
                 const userSnap = await getDoc(userRef)
@@ -65,7 +66,7 @@ export default function UserAccount() {
                         ? new Date(userData.createdAt.toDate()).toLocaleDateString("en-US", { month: "long", year: "numeric" })
                         : new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
-                    setCustomer({
+                    const customerData = {
                         id: `CUST-${currentUser.uid.substring(0, 5)}`,
                         name: userData.name || currentUser.displayName || "User",
                         email: userData.email || currentUser.email || "",
@@ -73,9 +74,11 @@ export default function UserAccount() {
                         address: userData.address || "",
                         avatarUrl: userData.avatarUrl || currentUser.photoURL || "/placeholder.svg?height=80&width=80",
                         memberSince,
-                    })
+                    }
 
-                    setAvatarPreview(userData.avatarUrl || currentUser.photoURL || "/placeholder.svg?height=80&width=80")
+                    setCustomer(customerData)
+                    setFormValues(customerData)
+                    setAvatarPreview(customerData.avatarUrl)
                 } else {
                     // Create a new user document if it doesn't exist
                     const newUser = {
@@ -89,25 +92,16 @@ export default function UserAccount() {
 
                     await updateDoc(userRef, newUser)
 
-                    setCustomer({
+                    const customerData = {
                         id: `CUST-${currentUser.uid.substring(0, 5)}`,
                         ...newUser,
                         memberSince: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-                    })
+                    }
 
-                    setAvatarPreview(currentUser.photoURL || "/placeholder.svg?height=80&width=80")
+                    setCustomer(customerData)
+                    setFormValues(customerData)
+                    setAvatarPreview(customerData.avatarUrl)
                 }
-
-                // Initialize form values
-                setFormValues({
-                    id: `CUST-${currentUser.uid.substring(0, 5)}`,
-                    name: customer.name,
-                    email: customer.email,
-                    phone: customer.phone,
-                    address: customer.address,
-                    avatarUrl: customer.avatarUrl,
-                    memberSince: customer.memberSince,
-                })
 
                 // Fetch orders
                 await fetchOrders()
@@ -141,23 +135,7 @@ export default function UserAccount() {
                 ...doc.data(),
             }))
 
-            setCurrentOrders(
-                currentOrdersData.length > 0
-                    ? currentOrdersData
-                    : [
-                        {
-                            id: "ORD-9876",
-                            date: "June 15, 2023",
-                            status: "Processing",
-                            items: [
-                                { name: "Wireless Headphones", quantity: 1, price: 129.99 },
-                                { name: "Phone Case", quantity: 1, price: 24.99 },
-                            ],
-                            total: 154.98,
-                            estimatedDelivery: "June 20, 2023",
-                        },
-                    ],
-            )
+            setCurrentOrders(currentOrdersData)
 
             // Get order history (status is "Delivered")
             const historyOrdersQuery = query(
@@ -173,45 +151,12 @@ export default function UserAccount() {
                 ...doc.data(),
             }))
 
-            setOrderHistory(
-                historyOrdersData.length > 0
-                    ? historyOrdersData
-                    : [
-                        {
-                            id: "ORD-8765",
-                            date: "May 28, 2023",
-                            status: "Delivered",
-                            items: [{ name: "Smart Watch", quantity: 1, price: 249.99 }],
-                            total: 249.99,
-                        },
-                        {
-                            id: "ORD-7654",
-                            date: "April 15, 2023",
-                            status: "Delivered",
-                            items: [
-                                { name: "Bluetooth Speaker", quantity: 1, price: 79.99 },
-                                { name: "USB-C Cable", quantity: 2, price: 19.98 },
-                            ],
-                            total: 99.97,
-                        },
-                        {
-                            id: "ORD-6543",
-                            date: "March 2, 2023",
-                            status: "Delivered",
-                            items: [
-                                { name: "Laptop Sleeve", quantity: 1, price: 39.99 },
-                                { name: "Wireless Mouse", quantity: 1, price: 49.99 },
-                                { name: "HDMI Adapter", quantity: 1, price: 29.99 },
-                            ],
-                            total: 119.97,
-                        },
-                    ],
-            )
+            setOrderHistory(historyOrdersData)
 
             // Calculate total spent
             const allOrders = [...currentOrdersData, ...historyOrdersData]
             const total = allOrders.reduce((sum, order) => sum + (order.total || 0), 0)
-            setTotalSpent(total || [...currentOrders, ...orderHistory].reduce((sum, order) => sum + order.total, 0))
+            setTotalSpent(total)
         } catch (error) {
             console.error("Error fetching orders:", error)
         }
@@ -303,161 +248,163 @@ export default function UserAccount() {
             <h1 className="text-3xl font-bold mb-6">My Account</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Customer Profile Section */}
-                <Card className="md:col-span-1">
-                    <CardHeader className="pb-3">
-                        <CardTitle>Customer Profile</CardTitle>
-                        <CardDescription>Your personal information</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {isEditing ? (
-                            // Edit Mode
-                            <div className="space-y-4">
-                                <div className="flex flex-col items-center mb-6">
-                                    <div className="relative mb-4">
-                                        <Avatar className="h-20 w-20">
-                                            <AvatarImage src={avatarPreview || "/placeholder.svg"} alt={formValues.name} />
+                <div className="md:col-span-1 space-y-6">
+                    {/* Customer Profile Section */}
+                    <Card className="md:col-span-1">
+                        <CardHeader className="pb-3">
+                            <CardTitle>Customer Profile</CardTitle>
+                            <CardDescription>Your personal information</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {isEditing ? (
+                                // Edit Mode
+                                <div className="space-y-4">
+                                    <div className="flex flex-col items-center mb-6">
+                                        <div className="relative mb-4">
+                                            <Avatar className="h-20 w-20">
+                                                <AvatarImage src={avatarPreview || "/placeholder.svg"} alt={formValues.name} />
+                                                <AvatarFallback>
+                                                    {formValues.name
+                                                        .split(" ")
+                                                        .map((n) => n[0])
+                                                        .join("")}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute bottom-0 right-0">
+                                                <Label htmlFor="avatar-upload" className="cursor-pointer">
+                                                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                                                        <Upload className="h-4 w-4" />
+                                                    </div>
+                                                </Label>
+                                                <Input
+                                                    id="avatar-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={handleAvatarChange}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="space-y-1">
+                                            <Label htmlFor="name">Full Name</Label>
+                                            <Input id="name" name="name" value={formValues.name} onChange={handleInputChange} />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="email">Email</Label>
+                                            <Input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                value={formValues.email}
+                                                onChange={handleInputChange}
+                                                disabled={currentUser?.providerData[0]?.providerId === "password"}
+                                            />
+                                            {currentUser?.providerData[0]?.providerId === "password" && (
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Email cannot be changed for email/password accounts
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="phone">Phone</Label>
+                                            <Input id="phone" name="phone" value={formValues.phone} onChange={handleInputChange} />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="address">Shipping Address</Label>
+                                            <Textarea
+                                                id="address"
+                                                name="address"
+                                                value={formValues.address}
+                                                onChange={handleInputChange}
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 mt-4">
+                                        <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
+                                            {isLoading ? (
+                                                <span className="flex items-center">
+                                                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
+                                                  Saving...
+                                                </span>
+                                            ) : (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-2" />
+                                                    Save Changes
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button variant="outline" onClick={handleCancel} className="flex-1" disabled={isLoading}>
+                                            <X className="h-4 w-4 mr-2" />
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                // View Mode
+                                <>
+                                    <div className="flex flex-col items-center mb-6">
+                                        <Avatar className="h-20 w-20 mb-4">
+                                            <AvatarImage src={customer.avatarUrl || "/placeholder.svg"} alt={customer.name} />
                                             <AvatarFallback>
-                                                {formValues.name
+                                                {customer.name
                                                     .split(" ")
                                                     .map((n) => n[0])
                                                     .join("")}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute bottom-0 right-0">
-                                            <Label htmlFor="avatar-upload" className="cursor-pointer">
-                                                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                                                    <Upload className="h-4 w-4" />
-                                                </div>
-                                            </Label>
-                                            <Input
-                                                id="avatar-upload"
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={handleAvatarChange}
-                                            />
+                                        <h3 className="text-xl font-semibold">{customer.name}</h3>
+                                        <p className="text-sm text-muted-foreground">Customer ID: {customer.id}</p>
+                                        <p className="text-sm text-muted-foreground">Member since {customer.memberSince}</p>
+                                    </div>
+
+                                    <Separator className="my-4" />
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-2">
+                                            <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium">Email</p>
+                                                <p className="text-sm text-muted-foreground">{customer.email}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-2">
+                                            <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium">Phone</p>
+                                                <p className="text-sm text-muted-foreground">{customer.phone || "Not provided"}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium">Shipping Address</p>
+                                                <p className="text-sm text-muted-foreground">{customer.address || "Not provided"}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-3">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="name">Full Name</Label>
-                                        <Input id="name" name="name" value={formValues.name} onChange={handleInputChange} />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            value={formValues.email}
-                                            onChange={handleInputChange}
-                                            disabled={currentUser?.providerData[0]?.providerId === "password"}
-                                        />
-                                        {currentUser?.providerData[0]?.providerId === "password" && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Email cannot be changed for email/password accounts
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <Label htmlFor="phone">Phone</Label>
-                                        <Input id="phone" name="phone" value={formValues.phone} onChange={handleInputChange} />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <Label htmlFor="address">Shipping Address</Label>
-                                        <Textarea
-                                            id="address"
-                                            name="address"
-                                            value={formValues.address}
-                                            onChange={handleInputChange}
-                                            rows={3}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2 mt-4">
-                                    <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
-                                        {isLoading ? (
-                                            <span className="flex items-center">
-                        <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
-                        Saving...
-                      </span>
-                                        ) : (
-                                            <>
-                                                <Check className="h-4 w-4 mr-2" />
-                                                Save Changes
-                                            </>
-                                        )}
+                                    <Button variant="outline" className="w-full mt-6" onClick={() => setIsEditing(true)}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit Profile
                                     </Button>
-                                    <Button variant="outline" onClick={handleCancel} className="flex-1" disabled={isLoading}>
-                                        <X className="h-4 w-4 mr-2" />
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : (
-                            // View Mode
-                            <>
-                                <div className="flex flex-col items-center mb-6">
-                                    <Avatar className="h-20 w-20 mb-4">
-                                        <AvatarImage src={customer.avatarUrl || "/placeholder.svg"} alt={customer.name} />
-                                        <AvatarFallback>
-                                            {customer.name
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <h3 className="text-xl font-semibold">{customer.name}</h3>
-                                    <p className="text-sm text-muted-foreground">Customer ID: {customer.id}</p>
-                                    <p className="text-sm text-muted-foreground">Member since {customer.memberSince}</p>
-                                </div>
-
-                                <Separator className="my-4" />
-
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-2">
-                                        <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium">Email</p>
-                                            <p className="text-sm text-muted-foreground">{customer.email}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-2">
-                                        <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium">Phone</p>
-                                            <p className="text-sm text-muted-foreground">{customer.phone || "Not provided"}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-2">
-                                        <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium">Shipping Address</p>
-                                            <p className="text-sm text-muted-foreground">{customer.address || "Not provided"}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button variant="outline" className="w-full mt-6" onClick={() => setIsEditing(true)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit Profile
-                                </Button>
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Orders Section */}
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 h-full">
                     <Tabs defaultValue="current">
                         <div className="flex items-center justify-between mb-4">
                             <TabsList>

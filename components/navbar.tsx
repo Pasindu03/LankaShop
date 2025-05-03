@@ -62,7 +62,7 @@ export default function Navbar() {
                 <ShoppingCart />
               </div>
               {/* User icon with conditional navigation */}
-              <a href="#" onClick={handleUserClick} className="cursor-pointer">
+              <a href="/user" onClick={handleUserClick} className="cursor-pointer">
                 <User />
                 {/* Optional: Show login status indicator */}
                 <span className="sr-only">{isLoggedIn ? "My Account" : "Login"}</span>
@@ -73,7 +73,7 @@ export default function Navbar() {
             <div className="flex md:hidden items-center space-x-4">
               <ShoppingCart />
               {/* Mobile user icon with conditional navigation */}
-              <a href="#" onClick={handleUserClick} className="cursor-pointer">
+              <a href="/user" onClick={handleUserClick} className="cursor-pointer">
                 <User size={20} />
               </a>
               <button
