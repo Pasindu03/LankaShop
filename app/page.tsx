@@ -443,27 +443,22 @@ export default function Home() {
                 <h3 className="text-lg font-medium mb-4">Quick Links</h3>
                 <ul className="space-y-2">
                   <li>
-                    <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href="/conf/about" className="text-gray-400 hover:text-white transition-colors">
                       About Us
                     </Link>
                   </li>
                   <li>
-                    <Link href="/products" className="text-gray-400 hover:text-white transition-colors">
-                      Products
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href="/conf/blog" className="text-gray-400 hover:text-white transition-colors">
                       Blog
                     </Link>
                   </li>
                   <li>
-                    <Link href="/faq" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href="/conf/faq" className="text-gray-400 hover:text-white transition-colors">
                       FAQs
                     </Link>
                   </li>
                   <li>
-                    <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href="/conf/contact" className="text-gray-400 hover:text-white transition-colors">
                       Contact Us
                     </Link>
                   </li>
@@ -520,17 +515,17 @@ export default function Home() {
               <div className="mt-4 md:mt-0">
                 <ul className="flex space-x-4 text-sm text-gray-400">
                   <li>
-                    <Link href="/privacy" className="hover:text-white transition-colors">
+                    <Link href="/terms-and-conditions/privacy" className="hover:text-white transition-colors">
                       Privacy Policy
                     </Link>
                   </li>
                   <li>
-                    <Link href="/terms" className="hover:text-white transition-colors">
+                    <Link href="/terms-and-conditions/terms" className="hover:text-white transition-colors">
                       Terms of Service
                     </Link>
                   </li>
                   <li>
-                    <Link href="/shipping" className="hover:text-white transition-colors">
+                    <Link href="/terms-and-conditions/shipping" className="hover:text-white transition-colors">
                       Shipping Policy
                     </Link>
                   </li>
