@@ -48,6 +48,7 @@ export default function Navbar() {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
+<<<<<<< HEAD
     <header className="w-full bg-white text-black shadow-sm">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
@@ -62,6 +63,66 @@ export default function Navbar() {
                 className="object-contain h-12 w-auto sm:h-16"
               />
             </Link>
+=======
+      <header className="w-full bg-white text-black shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="w-auto">
+              <Link href="/">
+                <Image
+                    src="/lankaShop.jpeg"
+                    alt="Lanka Shop"
+                    width={75}
+                    height={75}
+                    className="object-contain h-12 w-auto sm:h-16"
+                />
+              </Link>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8 text-sm tracking-wider">
+              <Link href="/ayurveda" className="hover:underline transition-colors">
+                AYURVEDIC
+              </Link>
+              <Link href="/handicraft" className="hover:underline transition-colors">
+                HANDICRAFT
+              </Link>
+              <Link href="/spices" className="hover:underline transition-colors">
+                SPICES
+              </Link>
+              <Link href="/tea" className="hover:underline transition-colors">
+                CEYLON TEA
+              </Link>
+              <div className="ml-4">
+                <ShoppingCart />
+              </div>
+              {/* User icon with conditional navigation */}
+              <a href="/user" onClick={handleUserClick} className="cursor-pointer">
+                <User />
+                {/* Optional: Show login status indicator */}
+                <span className="sr-only">{isLoggedIn ? "My Account" : "Login"}</span>
+              </a>
+            </nav>
+
+            {/* Mobile Navigation Toggle and Cart */}
+            <div className="flex md:hidden items-center space-x-4">
+              <ShoppingCart />
+              {/* Mobile user icon with conditional navigation */}
+              <a href="/user" onClick={handleUserClick} className="cursor-pointer">
+                <User size={20} />
+              </a>
+              <button
+                  className="text-sm tracking-wider flex items-center p-2"
+                  onClick={toggleMobileMenu}
+                  aria-label="Toggle menu"
+                  aria-expanded={isMobileMenuOpen}
+              >
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                <span className="ml-2 sr-only sm:not-sr-only">MENU</span>
+              </button>
+            </div>
+>>>>>>> 97e250c29cdebd5a01fe66510ae59b3456a58f02
           </div>
 
           {/* Desktop Navigation */}

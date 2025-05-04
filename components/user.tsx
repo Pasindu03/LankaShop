@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit } from "lucide-react"
+import {Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit, ChevronLeft} from "lucide-react"
 import { useAuth } from "@/context/auth-context"
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
+import { doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import Link from "next/link";
 
 export default function UserAccount() {
     const { currentUser } = useAuth()
@@ -32,11 +33,8 @@ export default function UserAccount() {
         memberSince: "",
     })
 
-    // State for editing mode
     const [isEditing, setIsEditing] = useState(false)
-    // Temporary state for form values
     const [formValues, setFormValues] = useState({ ...customer })
-    // State for avatar upload
     const [avatarFile, setAvatarFile] = useState(null)
     const [avatarPreview, setAvatarPreview] = useState(customer.avatarUrl)
 
@@ -48,11 +46,18 @@ export default function UserAccount() {
     // Fetch user data from Firestore
     useEffect(() => {
         const fetchUserData = async () => {
-            if (!currentUser) return
+            if (!currentUser) {
+                setIsLoading(false)
+                return
+            }
 
             try {
                 setIsLoading(true)
 
+                console.log("Current user object:", currentUser)
+                console.log("Display name:", currentUser.displayName)
+                console.log("Email:", currentUser.email)
+                console.log("Photo URL:", currentUser.photoURL)
                 // Get user profile from Firestore
                 const userRef = doc(db, "users", currentUser.uid)
                 const userSnap = await getDoc(userRef)
@@ -65,7 +70,7 @@ export default function UserAccount() {
                         ? new Date(userData.createdAt.toDate()).toLocaleDateString("en-US", { month: "long", year: "numeric" })
                         : new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })
 
-                    setCustomer({
+                    const customerData = {
                         id: `CUST-${currentUser.uid.substring(0, 5)}`,
                         name: userData.name || currentUser.displayName || "User",
                         email: userData.email || currentUser.email || "",
@@ -73,9 +78,11 @@ export default function UserAccount() {
                         address: userData.address || "",
                         avatarUrl: userData.avatarUrl || currentUser.photoURL || "/placeholder.svg?height=80&width=80",
                         memberSince,
-                    })
+                    }
 
-                    setAvatarPreview(userData.avatarUrl || currentUser.photoURL || "/placeholder.svg?height=80&width=80")
+                    setCustomer(customerData)
+                    setFormValues(customerData)
+                    setAvatarPreview(customerData.avatarUrl)
                 } else {
                     // Create a new user document if it doesn't exist
                     const newUser = {
@@ -87,27 +94,19 @@ export default function UserAccount() {
                         createdAt: new Date(),
                     }
 
-                    await updateDoc(userRef, newUser)
+                    // Use setDoc instead of updateDoc for a new document
+                    await setDoc(userRef, newUser)
 
-                    setCustomer({
+                    const customerData = {
                         id: `CUST-${currentUser.uid.substring(0, 5)}`,
                         ...newUser,
                         memberSince: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-                    })
+                    }
 
-                    setAvatarPreview(currentUser.photoURL || "/placeholder.svg?height=80&width=80")
+                    setCustomer(customerData)
+                    setFormValues(customerData)
+                    setAvatarPreview(customerData.avatarUrl)
                 }
-
-                // Initialize form values
-                setFormValues({
-                    id: `CUST-${currentUser.uid.substring(0, 5)}`,
-                    name: customer.name,
-                    email: customer.email,
-                    phone: customer.phone,
-                    address: customer.address,
-                    avatarUrl: customer.avatarUrl,
-                    memberSince: customer.memberSince,
-                })
 
                 // Fetch orders
                 await fetchOrders()
@@ -121,97 +120,47 @@ export default function UserAccount() {
         fetchUserData()
     }, [currentUser])
 
-    // Fetch orders from Firestore
+    // Modify the fetchOrders function to match your Firestore structure
     const fetchOrders = async () => {
         if (!currentUser) return
 
         try {
-            // Get current orders (status is not "Delivered")
-            const currentOrdersQuery = query(
+            // Query all orders for the current user
+            const ordersQuery = query(
                 collection(db, "orders"),
                 where("userId", "==", currentUser.uid),
-                where("status", "!=", "Delivered"),
-                orderBy("status"),
-                orderBy("date", "desc"),
+                orderBy("createdAt", "desc"),
             )
 
-            const currentOrdersSnapshot = await getDocs(currentOrdersQuery)
-            const currentOrdersData = currentOrdersSnapshot.docs.map((doc) => ({
+            const ordersSnapshot = await getDocs(ordersQuery)
+            const ordersData = ordersSnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
+                // Parse date from ISO string to display format
+                formattedDate: new Date(doc.data().createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                }),
             }))
 
-            setCurrentOrders(
-                currentOrdersData.length > 0
-                    ? currentOrdersData
-                    : [
-                        {
-                            id: "ORD-9876",
-                            date: "June 15, 2023",
-                            status: "Processing",
-                            items: [
-                                { name: "Wireless Headphones", quantity: 1, price: 129.99 },
-                                { name: "Phone Case", quantity: 1, price: 24.99 },
-                            ],
-                            total: 154.98,
-                            estimatedDelivery: "June 20, 2023",
-                        },
-                    ],
-            )
+            // Separate current orders (not delivered) and completed orders
+            // Since we don't have a "status" field, we'll use paymentStatus as a proxy
+            // You may need to adjust this logic based on your actual business rules
+            const current = ordersData.filter((order) => order.paymentStatus !== "completed")
+            const history = ordersData.filter((order) => order.paymentStatus === "completed")
 
-            // Get order history (status is "Delivered")
-            const historyOrdersQuery = query(
-                collection(db, "orders"),
-                where("userId", "==", currentUser.uid),
-                where("status", "==", "Delivered"),
-                orderBy("date", "desc"),
-            )
+            setCurrentOrders(current)
+            setOrderHistory(history)
 
-            const historyOrdersSnapshot = await getDocs(historyOrdersQuery)
-            const historyOrdersData = historyOrdersSnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }))
+            // Calculate total spent from all orders
+            const total = ordersData.reduce((sum, order) => {
+                // Convert string amount to number
+                const amount = Number.parseFloat(order.totalAmount || "0")
+                return sum + amount
+            }, 0)
 
-            setOrderHistory(
-                historyOrdersData.length > 0
-                    ? historyOrdersData
-                    : [
-                        {
-                            id: "ORD-8765",
-                            date: "May 28, 2023",
-                            status: "Delivered",
-                            items: [{ name: "Smart Watch", quantity: 1, price: 249.99 }],
-                            total: 249.99,
-                        },
-                        {
-                            id: "ORD-7654",
-                            date: "April 15, 2023",
-                            status: "Delivered",
-                            items: [
-                                { name: "Bluetooth Speaker", quantity: 1, price: 79.99 },
-                                { name: "USB-C Cable", quantity: 2, price: 19.98 },
-                            ],
-                            total: 99.97,
-                        },
-                        {
-                            id: "ORD-6543",
-                            date: "March 2, 2023",
-                            status: "Delivered",
-                            items: [
-                                { name: "Laptop Sleeve", quantity: 1, price: 39.99 },
-                                { name: "Wireless Mouse", quantity: 1, price: 49.99 },
-                                { name: "HDMI Adapter", quantity: 1, price: 29.99 },
-                            ],
-                            total: 119.97,
-                        },
-                    ],
-            )
-
-            // Calculate total spent
-            const allOrders = [...currentOrdersData, ...historyOrdersData]
-            const total = allOrders.reduce((sum, order) => sum + (order.total || 0), 0)
-            setTotalSpent(total || [...currentOrders, ...orderHistory].reduce((sum, order) => sum + order.total, 0))
+            setTotalSpent(total)
         } catch (error) {
             console.error("Error fetching orders:", error)
         }
@@ -300,164 +249,172 @@ export default function UserAccount() {
 
     return (
         <div className="container mx-auto py-8 px-4">
+            <Link href="/">
+                <Button variant="ghost" className="mb-6 flex items-center gap-2">
+                    <ChevronLeft className="h-4 w-4" />
+                    Back to Home
+                </Button>
+            </Link>
             <h1 className="text-3xl font-bold mb-6">My Account</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Customer Profile Section */}
-                <Card className="md:col-span-1">
-                    <CardHeader className="pb-3">
-                        <CardTitle>Customer Profile</CardTitle>
-                        <CardDescription>Your personal information</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {isEditing ? (
-                            // Edit Mode
-                            <div className="space-y-4">
-                                <div className="flex flex-col items-center mb-6">
-                                    <div className="relative mb-4">
-                                        <Avatar className="h-20 w-20">
-                                            <AvatarImage src={avatarPreview || "/placeholder.svg"} alt={formValues.name} />
+                <div className="md:col-span-1 space-y-6">
+                    {/* Customer Profile Section */}
+                    <Card className="md:col-span-1">
+                        <CardHeader className="pb-3">
+                            <CardTitle>Customer Profile</CardTitle>
+                            <CardDescription>Your personal information</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {isEditing ? (
+                                // Edit Mode
+                                <div className="space-y-4">
+                                    <div className="flex flex-col items-center mb-6">
+                                        <div className="relative mb-4">
+                                            <Avatar className="h-20 w-20">
+                                                <AvatarImage src={avatarPreview || "/placeholder.svg"} alt={formValues.name} />
+                                                <AvatarFallback>
+                                                    {formValues.name
+                                                        .split(" ")
+                                                        .map((n) => n[0])
+                                                        .join("")}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <div className="absolute bottom-0 right-0">
+                                                <Label htmlFor="avatar-upload" className="cursor-pointer">
+                                                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                                                        <Upload className="h-4 w-4" />
+                                                    </div>
+                                                </Label>
+                                                <Input
+                                                    id="avatar-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={handleAvatarChange}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="space-y-1">
+                                            <Label htmlFor="name">Full Name</Label>
+                                            <Input id="name" name="name" value={formValues.name} onChange={handleInputChange} />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="email">Email</Label>
+                                            <Input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                value={formValues.email}
+                                                onChange={handleInputChange}
+                                                disabled={currentUser?.providerData[0]?.providerId === "password"}
+                                            />
+                                            {currentUser?.providerData[0]?.providerId === "password" && (
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Email cannot be changed for email/password accounts
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="phone">Phone</Label>
+                                            <Input id="phone" name="phone" value={formValues.phone} onChange={handleInputChange} />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <Label htmlFor="address">Shipping Address</Label>
+                                            <Textarea
+                                                id="address"
+                                                name="address"
+                                                value={formValues.address}
+                                                onChange={handleInputChange}
+                                                rows={3}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 mt-4">
+                                        <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
+                                            {isLoading ? (
+                                                <span className="flex items-center">
+                          <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
+                          Saving...
+                        </span>
+                                            ) : (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-2" />
+                                                    Save Changes
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button variant="outline" onClick={handleCancel} className="flex-1" disabled={isLoading}>
+                                            <X className="h-4 w-4 mr-2" />
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                // View Mode
+                                <>
+                                    <div className="flex flex-col items-center mb-6">
+                                        <Avatar className="h-20 w-20 mb-4">
+                                            <AvatarImage src={customer.avatarUrl || "/placeholder.svg"} alt={customer.name} />
                                             <AvatarFallback>
-                                                {formValues.name
+                                                {customer.name
                                                     .split(" ")
                                                     .map((n) => n[0])
                                                     .join("")}
                                             </AvatarFallback>
                                         </Avatar>
-                                        <div className="absolute bottom-0 right-0">
-                                            <Label htmlFor="avatar-upload" className="cursor-pointer">
-                                                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
-                                                    <Upload className="h-4 w-4" />
-                                                </div>
-                                            </Label>
-                                            <Input
-                                                id="avatar-upload"
-                                                type="file"
-                                                accept="image/*"
-                                                className="hidden"
-                                                onChange={handleAvatarChange}
-                                            />
+                                        <h3 className="text-xl font-semibold">{customer.name}</h3>
+                                        <p className="text-sm text-muted-foreground">Customer ID: {customer.id}</p>
+                                        <p className="text-sm text-muted-foreground">Member since {customer.memberSince}</p>
+                                    </div>
+
+                                    <Separator className="my-4" />
+
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-2">
+                                            <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium">Email</p>
+                                                <p className="text-sm text-muted-foreground">{customer.email}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-2">
+                                            <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium">Phone</p>
+                                                <p className="text-sm text-muted-foreground">{customer.phone || "Not provided"}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                                            <div>
+                                                <p className="text-sm font-medium">Shipping Address</p>
+                                                <p className="text-sm text-muted-foreground">{customer.address || "Not provided"}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-3">
-                                    <div className="space-y-1">
-                                        <Label htmlFor="name">Full Name</Label>
-                                        <Input id="name" name="name" value={formValues.name} onChange={handleInputChange} />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            value={formValues.email}
-                                            onChange={handleInputChange}
-                                            disabled={currentUser?.providerData[0]?.providerId === "password"}
-                                        />
-                                        {currentUser?.providerData[0]?.providerId === "password" && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Email cannot be changed for email/password accounts
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <Label htmlFor="phone">Phone</Label>
-                                        <Input id="phone" name="phone" value={formValues.phone} onChange={handleInputChange} />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <Label htmlFor="address">Shipping Address</Label>
-                                        <Textarea
-                                            id="address"
-                                            name="address"
-                                            value={formValues.address}
-                                            onChange={handleInputChange}
-                                            rows={3}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2 mt-4">
-                                    <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
-                                        {isLoading ? (
-                                            <span className="flex items-center">
-                        <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
-                        Saving...
-                      </span>
-                                        ) : (
-                                            <>
-                                                <Check className="h-4 w-4 mr-2" />
-                                                Save Changes
-                                            </>
-                                        )}
+                                    <Button variant="outline" className="w-full mt-6" onClick={() => setIsEditing(true)}>
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit Profile
                                     </Button>
-                                    <Button variant="outline" onClick={handleCancel} className="flex-1" disabled={isLoading}>
-                                        <X className="h-4 w-4 mr-2" />
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : (
-                            // View Mode
-                            <>
-                                <div className="flex flex-col items-center mb-6">
-                                    <Avatar className="h-20 w-20 mb-4">
-                                        <AvatarImage src={customer.avatarUrl || "/placeholder.svg"} alt={customer.name} />
-                                        <AvatarFallback>
-                                            {customer.name
-                                                .split(" ")
-                                                .map((n) => n[0])
-                                                .join("")}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <h3 className="text-xl font-semibold">{customer.name}</h3>
-                                    <p className="text-sm text-muted-foreground">Customer ID: {customer.id}</p>
-                                    <p className="text-sm text-muted-foreground">Member since {customer.memberSince}</p>
-                                </div>
-
-                                <Separator className="my-4" />
-
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-2">
-                                        <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium">Email</p>
-                                            <p className="text-sm text-muted-foreground">{customer.email}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-2">
-                                        <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium">Phone</p>
-                                            <p className="text-sm text-muted-foreground">{customer.phone || "Not provided"}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-2">
-                                        <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                                        <div>
-                                            <p className="text-sm font-medium">Shipping Address</p>
-                                            <p className="text-sm text-muted-foreground">{customer.address || "Not provided"}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button variant="outline" className="w-full mt-6" onClick={() => setIsEditing(true)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit Profile
-                                </Button>
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
+                                </>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Orders Section */}
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 h-full">
                     <Tabs defaultValue="current">
                         <div className="flex items-center justify-between mb-4">
                             <TabsList>
@@ -478,10 +435,12 @@ export default function UserAccount() {
                                             <CardHeader className="pb-2">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                                                        <CardDescription>Placed on {order.date}</CardDescription>
+                                                        <CardTitle className="text-lg">Order #{order.orderId || order.id}</CardTitle>
+                                                        <CardDescription>Placed on {order.formattedDate}</CardDescription>
                                                     </div>
-                                                    <Badge variant={order.status === "Processing" ? "outline" : "default"}>{order.status}</Badge>
+                                                    <Badge variant={order.paymentStatus === "paid" ? "default" : "outline"}>
+                                                        {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus}
+                                                    </Badge>
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
@@ -489,14 +448,15 @@ export default function UserAccount() {
                                                     <div>
                                                         <h4 className="text-sm font-medium mb-2">Items</h4>
                                                         <ul className="space-y-2">
-                                                            {order.items.map((item, index) => (
-                                                                <li key={index} className="flex justify-between text-sm">
-                                  <span>
-                                    {item.quantity}x {item.name}
-                                  </span>
-                                                                    <span>${item.price.toFixed(2)}</span>
-                                                                </li>
-                                                            ))}
+                                                            {order.products &&
+                                                                order.products.map((product, index) => (
+                                                                    <li key={index} className="flex justify-between text-sm">
+                                    <span>
+                                      {product.quantity}x {product.name}
+                                    </span>
+                                                                        <span>${Number.parseFloat(product.price).toFixed(2)}</span>
+                                                                    </li>
+                                                                ))}
                                                         </ul>
                                                     </div>
 
@@ -504,12 +464,12 @@ export default function UserAccount() {
 
                                                     <div className="flex justify-between font-medium">
                                                         <span>Total</span>
-                                                        <span>${order.total.toFixed(2)}</span>
+                                                        <span>${Number.parseFloat(order.totalAmount || "0").toFixed(2)}</span>
                                                     </div>
 
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <Clock className="h-4 w-4 text-muted-foreground" />
-                                                        <span>Estimated delivery: {order.estimatedDelivery}</span>
+                                                        <span>Payment via {order.paymentProvider || "unknown"}</span>
                                                     </div>
                                                 </div>
                                             </CardContent>
@@ -539,25 +499,28 @@ export default function UserAccount() {
                                             <CardHeader className="pb-2">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                                                        <CardDescription>Placed on {order.date}</CardDescription>
+                                                        <CardTitle className="text-lg">Order #{order.orderId || order.id}</CardTitle>
+                                                        <CardDescription>Placed on {order.formattedDate}</CardDescription>
                                                     </div>
-                                                    <Badge variant="secondary">{order.status}</Badge>
+                                                    <Badge variant="secondary">Completed</Badge>
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="space-y-4">
                                                     <div>
-                                                        <h4 className="text-sm font-medium mb-2">Items ({order.items.length})</h4>
+                                                        <h4 className="text-sm font-medium mb-2">
+                                                            Items ({order.products ? order.products.length : 0})
+                                                        </h4>
                                                         <ul className="space-y-2">
-                                                            {order.items.map((item, index) => (
-                                                                <li key={index} className="flex justify-between text-sm">
-                                  <span>
-                                    {item.quantity}x {item.name}
-                                  </span>
-                                                                    <span>${item.price.toFixed(2)}</span>
-                                                                </li>
-                                                            ))}
+                                                            {order.products &&
+                                                                order.products.map((product, index) => (
+                                                                    <li key={index} className="flex justify-between text-sm">
+                                    <span>
+                                      {product.quantity}x {product.name}
+                                    </span>
+                                                                        <span>${Number.parseFloat(product.price).toFixed(2)}</span>
+                                                                    </li>
+                                                                ))}
                                                         </ul>
                                                     </div>
 
@@ -565,7 +528,7 @@ export default function UserAccount() {
 
                                                     <div className="flex justify-between font-medium">
                                                         <span>Total</span>
-                                                        <span>${order.total.toFixed(2)}</span>
+                                                        <span>${Number.parseFloat(order.totalAmount || "0").toFixed(2)}</span>
                                                     </div>
                                                 </div>
                                             </CardContent>
