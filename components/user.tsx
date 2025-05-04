@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit } from "lucide-react"
+import {Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit, ChevronLeft} from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import Link from "next/link";
 
 export default function UserAccount() {
     const { currentUser } = useAuth()
@@ -248,6 +249,12 @@ export default function UserAccount() {
 
     return (
         <div className="container mx-auto py-8 px-4">
+            <Link href="/">
+                <Button variant="ghost" className="mb-6 flex items-center gap-2">
+                    <ChevronLeft className="h-4 w-4" />
+                    Back to Home
+                </Button>
+            </Link>
             <h1 className="text-3xl font-bold mb-6">My Account</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

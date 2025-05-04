@@ -81,43 +81,6 @@ export default function Home() {
     },
   }
 
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Ceylon Premium Tea Collection",
-      price: 24.99,
-      image:
-          "https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      category: "Tea",
-      badge: "Best Seller",
-    },
-    {
-      id: 2,
-      name: "Ayurvedic Wellness Kit",
-      price: 39.99,
-      image: "https://images.pexels.com/photos/8940745/pexels-photo-8940745.jpeg?height=400&width=400",
-      category: "Ayurveda",
-      badge: "New",
-    },
-    {
-      id: 3,
-      name: "Handcrafted Wooden Elephant",
-      price: 49.99,
-      image:
-          "https://images.pexels.com/photos/2113125/pexels-photo-2113125.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      category: "Handicrafts",
-    },
-    {
-      id: 4,
-      name: "Sri Lankan Spice Gift Box",
-      price: 29.99,
-      image:
-          "https://images.pexels.com/photos/2632292/pexels-photo-2632292.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-      category: "Spices",
-      badge: "Limited",
-    },
-  ]
-
   const testimonials = [
     {
       id: 1,
@@ -125,7 +88,7 @@ export default function Home() {
       role: "Tea Enthusiast",
       content:
           "The Ceylon tea from Lanka Shop is absolutely divine! The authentic flavor takes me right back to my travels in Sri Lanka. Excellent quality and fast shipping.",
-      avatar: "/placeholder.svg?height=80&width=80",
+      avatar: "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
       rating: 5,
     },
     {
@@ -134,7 +97,7 @@ export default function Home() {
       role: "Wellness Coach",
       content:
           "I've been using their Ayurvedic products for months now and have seen remarkable improvements in my clients' wellbeing. The quality is unmatched!",
-      avatar: "/placeholder.svg?height=80&width=80",
+      avatar: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
       rating: 5,
     },
     {
@@ -143,7 +106,7 @@ export default function Home() {
       role: "Interior Designer",
       content:
           "The handicrafts from Lanka Shop have become a staple in my design projects. Each piece tells a story and brings authentic Sri Lankan artistry to my clients' homes.",
-      avatar: "/placeholder.svg?height=80&width=80",
+      avatar: "https://images.pexels.com/photos/3866555/pexels-photo-3866555.png?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
       rating: 5,
     },
   ]
