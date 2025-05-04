@@ -1,13 +1,13 @@
 export type Product = {
-  id: string
-  name: string
-  price: number
-  image: string
-  category: string
-  mainCategory: "ayurvedic" | "handicraft" | "spices" | "tea";
-  rating: number
-  reviews: number
-  date: string
-  description: string
-}
-
+  productDetails: any;
+  id: string;
+  name: string;
+  price: string;
+  image: string;
+  categoryId: string;
+  subcategoryId: string;
+  rating: number;
+  reviews: number;
+  date: string;
+  description: string;
+};
