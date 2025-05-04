@@ -119,47 +119,46 @@ export default function UserAccount() {
         fetchUserData()
     }, [currentUser])
 
-    // Fetch orders from Firestore
+    // Modify the fetchOrders function to match your Firestore structure
     const fetchOrders = async () => {
         if (!currentUser) return
 
         try {
-            // Get current orders (status is not "Delivered")
-            const currentOrdersQuery = query(
+            // Query all orders for the current user
+            const ordersQuery = query(
                 collection(db, "orders"),
                 where("userId", "==", currentUser.uid),
-                where("status", "!=", "Delivered"),
-                orderBy("status"),
-                orderBy("date", "desc"),
+                orderBy("createdAt", "desc"),
             )
 
-            const currentOrdersSnapshot = await getDocs(currentOrdersQuery)
-            const currentOrdersData = currentOrdersSnapshot.docs.map((doc) => ({
+            const ordersSnapshot = await getDocs(ordersQuery)
+            const ordersData = ordersSnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
+                // Parse date from ISO string to display format
+                formattedDate: new Date(doc.data().createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                }),
             }))
 
-            setCurrentOrders(currentOrdersData)
+            // Separate current orders (not delivered) and completed orders
+            // Since we don't have a "status" field, we'll use paymentStatus as a proxy
+            // You may need to adjust this logic based on your actual business rules
+            const current = ordersData.filter((order) => order.paymentStatus !== "completed")
+            const history = ordersData.filter((order) => order.paymentStatus === "completed")
 
-            // Get order history (status is "Delivered")
-            const historyOrdersQuery = query(
-                collection(db, "orders"),
-                where("userId", "==", currentUser.uid),
-                where("status", "==", "Delivered"),
-                orderBy("date", "desc"),
-            )
+            setCurrentOrders(current)
+            setOrderHistory(history)
 
-            const historyOrdersSnapshot = await getDocs(historyOrdersQuery)
-            const historyOrdersData = historyOrdersSnapshot.docs.map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-            }))
+            // Calculate total spent from all orders
+            const total = ordersData.reduce((sum, order) => {
+                // Convert string amount to number
+                const amount = Number.parseFloat(order.totalAmount || "0")
+                return sum + amount
+            }, 0)
 
-            setOrderHistory(historyOrdersData)
-
-            // Calculate total spent
-            const allOrders = [...currentOrdersData, ...historyOrdersData]
-            const total = allOrders.reduce((sum, order) => sum + (order.total || 0), 0)
             setTotalSpent(total)
         } catch (error) {
             console.error("Error fetching orders:", error)
@@ -429,10 +428,12 @@ export default function UserAccount() {
                                             <CardHeader className="pb-2">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                                                        <CardDescription>Placed on {order.date}</CardDescription>
+                                                        <CardTitle className="text-lg">Order #{order.orderId || order.id}</CardTitle>
+                                                        <CardDescription>Placed on {order.formattedDate}</CardDescription>
                                                     </div>
-                                                    <Badge variant={order.status === "Processing" ? "outline" : "default"}>{order.status}</Badge>
+                                                    <Badge variant={order.paymentStatus === "paid" ? "default" : "outline"}>
+                                                        {order.paymentStatus === "paid" ? "Paid" : order.paymentStatus}
+                                                    </Badge>
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
@@ -440,14 +441,15 @@ export default function UserAccount() {
                                                     <div>
                                                         <h4 className="text-sm font-medium mb-2">Items</h4>
                                                         <ul className="space-y-2">
-                                                            {order.items.map((item, index) => (
-                                                                <li key={index} className="flex justify-between text-sm">
-                                  <span>
-                                    {item.quantity}x {item.name}
-                                  </span>
-                                                                    <span>${item.price.toFixed(2)}</span>
-                                                                </li>
-                                                            ))}
+                                                            {order.products &&
+                                                                order.products.map((product, index) => (
+                                                                    <li key={index} className="flex justify-between text-sm">
+                                    <span>
+                                      {product.quantity}x {product.name}
+                                    </span>
+                                                                        <span>${Number.parseFloat(product.price).toFixed(2)}</span>
+                                                                    </li>
+                                                                ))}
                                                         </ul>
                                                     </div>
 
@@ -455,12 +457,12 @@ export default function UserAccount() {
 
                                                     <div className="flex justify-between font-medium">
                                                         <span>Total</span>
-                                                        <span>${order.total.toFixed(2)}</span>
+                                                        <span>${Number.parseFloat(order.totalAmount || "0").toFixed(2)}</span>
                                                     </div>
 
                                                     <div className="flex items-center gap-2 text-sm">
                                                         <Clock className="h-4 w-4 text-muted-foreground" />
-                                                        <span>Estimated delivery: {order.estimatedDelivery}</span>
+                                                        <span>Payment via {order.paymentProvider || "unknown"}</span>
                                                     </div>
                                                 </div>
                                             </CardContent>
@@ -490,25 +492,28 @@ export default function UserAccount() {
                                             <CardHeader className="pb-2">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <CardTitle className="text-lg">Order #{order.id}</CardTitle>
-                                                        <CardDescription>Placed on {order.date}</CardDescription>
+                                                        <CardTitle className="text-lg">Order #{order.orderId || order.id}</CardTitle>
+                                                        <CardDescription>Placed on {order.formattedDate}</CardDescription>
                                                     </div>
-                                                    <Badge variant="secondary">{order.status}</Badge>
+                                                    <Badge variant="secondary">Completed</Badge>
                                                 </div>
                                             </CardHeader>
                                             <CardContent>
                                                 <div className="space-y-4">
                                                     <div>
-                                                        <h4 className="text-sm font-medium mb-2">Items ({order.items.length})</h4>
+                                                        <h4 className="text-sm font-medium mb-2">
+                                                            Items ({order.products ? order.products.length : 0})
+                                                        </h4>
                                                         <ul className="space-y-2">
-                                                            {order.items.map((item, index) => (
-                                                                <li key={index} className="flex justify-between text-sm">
-                                  <span>
-                                    {item.quantity}x {item.name}
-                                  </span>
-                                                                    <span>${item.price.toFixed(2)}</span>
-                                                                </li>
-                                                            ))}
+                                                            {order.products &&
+                                                                order.products.map((product, index) => (
+                                                                    <li key={index} className="flex justify-between text-sm">
+                                    <span>
+                                      {product.quantity}x {product.name}
+                                    </span>
+                                                                        <span>${Number.parseFloat(product.price).toFixed(2)}</span>
+                                                                    </li>
+                                                                ))}
                                                         </ul>
                                                     </div>
 
@@ -516,7 +521,7 @@ export default function UserAccount() {
 
                                                     <div className="flex justify-between font-medium">
                                                         <span>Total</span>
-                                                        <span>${order.total.toFixed(2)}</span>
+                                                        <span>${Number.parseFloat(order.totalAmount || "0").toFixed(2)}</span>
                                                     </div>
                                                 </div>
                                             </CardContent>
