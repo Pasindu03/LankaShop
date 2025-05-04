@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
+import { doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
 import { db, storage } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 
@@ -45,7 +45,10 @@ export default function UserAccount() {
     // Fetch user data from Firestore
     useEffect(() => {
         const fetchUserData = async () => {
-            if (!currentUser) return
+            if (!currentUser) {
+                setIsLoading(false)
+                return
+            }
 
             try {
                 setIsLoading(true)
@@ -90,7 +93,8 @@ export default function UserAccount() {
                         createdAt: new Date(),
                     }
 
-                    await updateDoc(userRef, newUser)
+                    // Use setDoc instead of updateDoc for a new document
+                    await setDoc(userRef, newUser)
 
                     const customerData = {
                         id: `CUST-${currentUser.uid.substring(0, 5)}`,
@@ -331,9 +335,9 @@ export default function UserAccount() {
                                         <Button onClick={handleSubmit} className="flex-1" disabled={isLoading}>
                                             {isLoading ? (
                                                 <span className="flex items-center">
-                                                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
-                                                  Saving...
-                                                </span>
+                          <span className="animate-spin h-4 w-4 mr-2 border-2 border-b-transparent rounded-full"></span>
+                          Saving...
+                        </span>
                                             ) : (
                                                 <>
                                                     <Check className="h-4 w-4 mr-2" />
