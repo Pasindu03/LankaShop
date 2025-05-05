@@ -209,7 +209,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Why Choose Us Section */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-serif text-center mb-4">Why Choose Lanka Shop</h2>
@@ -231,13 +230,13 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium mb-2">Authentic Products</h3>
-                <p className="text-gray-600">
-                  We source directly from Sri Lanka with official authorizations, ensuring authenticity and quality.
+                <h3 className="text-xl font-medium mb-2">Free Shipping</h3>
+                <p className="text-gray-600 mt-2">
+                  Enjoy complimentary delivery on all orders above £100, bringing Sri Lankan treasures to your doorstep.
                 </p>
               </div>
 
@@ -254,13 +253,13 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium mb-2">Ethical Sourcing</h3>
-                <p className="text-gray-600">
-                  We work with local artisans and farmers, ensuring fair compensation and sustainable practices.
+                <h3 className="text-xl font-medium mb-2">100% Payment Secured</h3>
+                <p className="text-gray-600 mt-2">
+                  Shop with confidence using our secure payment systems that protect your personal information.
                 </p>
               </div>
 
@@ -277,13 +276,13 @@ export default function Home() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                        d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium mb-2">Fast UK Shipping</h3>
-                <p className="text-gray-600">
-                  We maintain inventory in the UK, allowing for quick delivery throughout the United Kingdom.
+                <h3 className="text-xl font-medium mb-2">Handpicked Treasures from Sri Lanka</h3>
+                <p className="text-gray-600 mt-2">
+                  Carefully selected authentic Sri Lankan products delivered directly to you from Epsom to your door steps.
                 </p>
               </div>
             </div>
