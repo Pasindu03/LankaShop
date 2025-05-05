@@ -1,208 +1,248 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Image from "next/image"
-import { useParams } from "next/navigation"
-import { Minus, Plus, ShoppingBag, Star, StarHalf } from "lucide-react"
-import Breadcrumb from "@/components/breadcrumb"
 import {
-    ayurvedicProducts,
-    handicraftProducts,
-    spicesProducts,
-    teaProducts,
-} from "@/data/products"
-import type { Product } from "@/types/product"
-import Navbar from "@/components/navbar"
-import { useCart } from "@/context/cart-context"
+  useState,
+  useEffect,
+  JSXElementConstructor,
+  Key,
+  PromiseLikeOfReactNode,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+} from "react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { Minus, Plus, ShoppingBag, Star, StarHalf } from "lucide-react";
+import Breadcrumb from "@/components/breadcrumb";
+import Navbar from "@/components/navbar";
+import { useCart } from "@/context/cart-context";
+import type { Product } from "@/types/product";
+import { getProduct } from "@/lib/services/productService";
+import { getCategoryById } from "@/lib/services/categoryService";
 
-const getCategoryInfo = (product: Product) => {
-    const categoryMap: Record<string, { name: string; path: string }> = {
-        herbs: { name: "Ayurvedic", path: "/ayurveda" },
-        oils: { name: "Ayurvedic", path: "/ayurveda" },
-        supplements: { name: "Ayurvedic", path: "/ayurveda" },
-        skincare: { name: "Ayurvedic", path: "/ayurveda" },
-        masks: { name: "Handicraft", path: "/handicraft" },
-        textiles: { name: "Handicraft", path: "/handicraft" },
-        woodwork: { name: "Handicraft", path: "/handicraft" },
-        jewelry: { name: "Handicraft", path: "/handicraft" },
-        cinnamon: { name: "Spices", path: "/spices" },
-        cardamom: { name: "Spices", path: "/spices" },
-        cloves: { name: "Spices", path: "/spices" },
-        pepper: { name: "Spices", path: "/spices" },
-        black: { name: "Ceylon Tea", path: "/tea" },
-        green: { name: "Ceylon Tea", path: "/tea" },
-        white: { name: "Ceylon Tea", path: "/tea" },
-        herbal: { name: "Ceylon Tea", path: "/tea" },
-    }
-    return categoryMap[product.category] || { name: "Products", path: "/" }
-}
+type CategoryMeta = {
+  id: string;
+  name: string;
+  heroImage?: string;
+  description?: string;
+};
 
 export default function ProductPage() {
-    const { slug } = useParams()
-    const [quantity, setQuantity] = useState(1)
-    const { addToCart } = useCart()
+  const { slug } = useParams(); // product ID
+  const { addToCart } = useCart();
 
-    const allProducts = [
-        ...ayurvedicProducts,
-        ...handicraftProducts,
-        ...spicesProducts,
-        ...teaProducts,
-    ]
-    const product = allProducts.find((p) => p.id === slug)
+  const [product, setProduct] = useState<Product | null>(null);
+  const [category, setCategory] = useState<CategoryMeta | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
 
-    if (!product) {
-        return (
-            <div className="container mx-auto px-4 py-16 text-center">
-                <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-                <p>The product you are looking for does not exist.</p>
-            </div>
-        )
-    }
-
-    const categoryInfo = getCategoryInfo(product)
-
-    const incrementQuantity = () => setQuantity((q) => q + 1)
-    const decrementQuantity = () => setQuantity((q) => Math.max(1, q - 1))
-
-    const handleAddToCart = () => {
-        console.log("🏷️ ProductPage.handleAddToCart – quantity:", quantity)
-        addToCart({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            quantity,
-            image: product.image || "/placeholder.svg",
-            category: product.category,
-        })
-        setQuantity(1)
-    }
-
-    const renderRating = (rating: number) => {
-        const stars = []
-        const fullStars = Math.floor(rating)
-        const hasHalf = rating % 1 >= 0.5
-
-        for (let i = 0; i < fullStars; i++) {
-            stars.push(
-                <Star
-                    key={`star-${i}`}
-                    className="fill-current text-yellow-400"
-                    size={16}
-                />
-            )
+  useEffect(() => {
+    if (!slug) return;
+    async function fetchData() {
+      try {
+        // 1) Fetch product document
+        const prod = await getProduct(Array.isArray(slug) ? slug[0] : slug);
+        if (!prod) {
+          setProduct(null);
+          return;
         }
-        if (hasHalf) {
-            stars.push(
-                <StarHalf
-                    key="half-star"
-                    className="fill-current text-yellow-400"
-                    size={16}
-                />
-            )
-        }
-        const empty = 5 - stars.length
-        for (let i = 0; i < empty; i++) {
-            stars.push(
-                <Star key={`empty-star-${i}`} className="text-gray-300" size={16} />
-            )
-        }
-        return stars
-    }
+        // ensure we have the id field
+        setProduct(prod);
 
+        // 2) Fetch category metadata
+        const cat = await getCategoryById(prod.categoryId);
+        if (cat) setCategory(cat);
+      } catch (err) {
+        console.error("Error loading product page:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [slug]);
+
+  // Loading & not-found states
+  if (loading) {
     return (
-        <main>
-            <Navbar />
-            <div className="container mx-auto pt-7 px-4 py-8">
-                {/* Breadcrumb */}
-                <div className="mb-6">
-                    <Breadcrumb
-                        items={[
-                            { label: categoryInfo.name, href: categoryInfo.path },
-                            {
-                                label: product.name,
-                                href: `/product/${product.id}`,
-                                isCurrent: true,
-                            },
-                        ]}
-                    />
-                </div>
+      <div className="container mx-auto px-4 py-16 text-center">
+        <p>Loading…</p>
+      </div>
+    );
+  }
+  if (!product) {
+    return (
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+        <p>This product does not exist.</p>
+      </div>
+    );
+  }
 
-                <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-                    {/* Image */}
-                    <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden">
-                        <Image
-                            src={product.image || "/placeholder.svg"}
-                            alt={product.name}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
+  // Cart handlers
+  const increment = () => setQuantity((q) => q + 1);
+  const decrement = () => setQuantity((q) => Math.max(1, q - 1));
 
-                    {/* Details */}
-                    <div className="flex flex-col">
-                        <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: parseFloat(product.price),
+      quantity,
+      image: product.image || "/placeholder.svg",
+      category: category?.name || "Uncategorized",
+    });
+    setQuantity(1);
+  };
 
-                        <div className="flex items-center mt-2 mb-4">
-                            <div className="flex mr-2">{renderRating(product.rating)}</div>
-                            <span className="text-sm text-gray-500">
+  // Rating renderer
+  const renderRating = (rating: number) => {
+    const stars = [];
+    const full = Math.floor(rating);
+    const half = rating % 1 >= 0.5;
+
+    for (let i = 0; i < full; i++) {
+      stars.push(
+        <Star
+          key={`star-${i}`}
+          className="fill-current text-yellow-400"
+          size={16}
+        />
+      );
+    }
+    if (half) {
+      stars.push(
+        <StarHalf
+          key="half-star"
+          className="fill-current text-yellow-400"
+          size={16}
+        />
+      );
+    }
+    const empty = 5 - stars.length;
+    for (let i = 0; i < empty; i++) {
+      stars.push(
+        <Star key={`empty-${i}`} className="text-gray-300" size={16} />
+      );
+    }
+    return stars;
+  };
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    {
+      label: category?.name || "Products",
+      href: `/categories/${product.categoryId ?? ""}`,
+    },
+    {
+      label: product.name,
+      href: `/product/${product.id}`,
+      isCurrent: true,
+    },
+  ];
+
+  return (
+    <main>
+      <Navbar />
+      <div className="container mx-auto pt-28 px-4 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb items={breadcrumbItems} />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
+          {/* Image */}
+          <div className="relative h-[400px] md:h-[500px] rounded-lg overflow-hidden">
+            <Image
+              src={product.image || "/placeholder.svg"}
+              alt={product.name}
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+
+          {/* Details */}
+          <div className="flex flex-col">
+            <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+
+            <div className="flex items-center mt-2 mb-4">
+              <div className="flex mr-2">{renderRating(product.rating)}</div>
+              <span className="text-sm text-gray-500">
                 ({product.reviews} reviews)
               </span>
-                        </div>
-
-                        <div className="text-2xl font-bold mb-6">
-                            £{product.price.toFixed(2)}
-                        </div>
-                        <p className="text-gray-600 mb-8">{product.description}</p>
-
-                        {/* Quantity */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Quantity
-                            </label>
-                            <div className="flex items-center">
-                                <button
-                                    onClick={decrementQuantity}
-                                    className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100"
-                                    aria-label="Decrease quantity"
-                                >
-                                    <Minus size={16} />
-                                </button>
-                                <div className="px-4 py-2 border-t border-b border-gray-300 min-w-[50px] text-center">
-                                    {quantity}
-                                </div>
-                                <button
-                                    onClick={incrementQuantity}
-                                    className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100"
-                                    aria-label="Increase quantity"
-                                >
-                                    <Plus size={16} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Add to Cart */}
-                        <button
-                            onClick={handleAddToCart}
-                            className="flex items-center justify-center bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors"
-                        >
-                            <ShoppingBag size={20} className="mr-2" />
-                            Add to Cart
-                        </button>
-
-                        {/* Extra Details */}
-                        <div className="mt-8 pt-8 border-t border-gray-200">
-                            <h2 className="text-lg font-semibold mb-4">Product Details</h2>
-                            <ul className="list-disc pl-5 space-y-2 text-gray-600">
-                                <li>Authentic Sri Lankan product</li>
-                                <li>Premium quality</li>
-                                <li>Ethically sourced</li>
-                                <li>Ships from UK warehouse</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </main>
-    )
+
+            <div className="text-2xl font-bold mb-6">
+              £{parseFloat(product.price).toFixed(2)}
+            </div>
+            <p className="text-gray-600 mb-8">{product.description}</p>
+
+            {/* Quantity */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity
+              </label>
+              <div className="flex items-center">
+                <button
+                  onClick={decrement}
+                  className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={16} />
+                </button>
+                <div className="px-4 py-2 border-t border-b border-gray-300 min-w-[50px] text-center">
+                  {quantity}
+                </div>
+                <button
+                  onClick={increment}
+                  className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Add to Cart */}
+            <button
+              onClick={handleAddToCart}
+              className="flex items-center justify-center bg-black text-white py-3 px-6 rounded-md hover:bg-gray-800 transition-colors"
+            >
+              <ShoppingBag size={20} className="mr-2" />
+              Add to Cart
+            </button>
+
+            {/* Extra Details */}
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <h2 className="text-lg font-semibold mb-4">Product Details</h2>
+              <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                {product.productDetails?.map(
+                  (
+                    line:
+                      | string
+                      | number
+                      | boolean
+                      | ReactElement<any, string | JSXElementConstructor<any>>
+                      | Iterable<ReactNode>
+                      | ReactPortal
+                      | PromiseLikeOfReactNode
+                      | null
+                      | undefined,
+                    i: Key | null | undefined
+                  ) => <li key={i}>{line}</li>
+                ) || (
+                  <>
+                    <li>Authentic Sri Lankan product</li>
+                    <li>Premium quality</li>
+                    <li>Ethically sourced</li>
+                    <li>Ships from UK warehouse</li>
+                  </>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }
