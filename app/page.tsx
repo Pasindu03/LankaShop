@@ -124,6 +124,7 @@ const categoryHoverText = {
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const keyId = "15cbcf57-9552-4be0-aa05-97a7ceffa5b3";
 
   useEffect(() => {
     async function fetchCategories() {
@@ -194,12 +195,12 @@ export default function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href={"/handicraft"}>
+                <Link href={`/categories/${keyId}`}>
                   <Button size="lg" className="bg-amber-500 hover:bg-amber-600 text-white border-0 px-8">
                     SHOP NOW
                   </Button>
                 </Link>
-                <Link href={"/about"}>
+                <Link href={"/conf/about"}>
                   <Button size="lg" variant="outline" className="text-black border-white hover:bg-black hover:text-white">
                     EXPLORE OUR STORY
                   </Button>
