@@ -1,197 +1,185 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { Menu, User, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import ShoppingCart from "./shopping-cart";
-import { useAuth } from "@/context/auth-context";
-import { getDocs, collection, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import type React from "react"
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { Menu, User, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import ShoppingCart from "./shopping-cart"
+import { useAuth } from "@/context/auth-context"
+import { getDocs, collection, query, orderBy } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 interface Category {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isLoggedIn } = useAuth();
-  const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { isLoggedIn } = useAuth()
+  const router = useRouter()
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const q = query(collection(db, "categories"), orderBy("name", "asc"));
-        const snap = await getDocs(q);
+        const q = query(collection(db, "categories"), orderBy("name", "asc"))
+        const snap = await getDocs(q)
         const items = snap.docs.map((doc) => ({
           id: doc.id,
           name: (doc.data() as any).name,
-        }));
-        setCategories(items);
+        }))
+        setCategories(items)
       } catch (err) {
-        console.error("Failed to load categories:", err);
+        console.error("Failed to load categories:", err)
       }
     }
-    fetchCategories();
-  }, []);
+    fetchCategories()
 
-  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev);
+    // Add scroll listener for navbar shadow
+    const handleScroll = () => {
+      if (window.scrollY > 10) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const toggleMobileMenu = () => setIsMobileMenuOpen((prev) => !prev)
 
   const handleUserClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    router.push(isLoggedIn ? "/user" : "/login");
-  };
+    e.preventDefault()
+    router.push(isLoggedIn ? "/user" : "/login")
+  }
 
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
   return (
-<<<<<<< HEAD
-    <header className="w-full bg-white text-black shadow-sm">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <div className="w-auto">
-            <Link href="/">
-              <Image
-                src="/lankaShop.jpeg"
-                alt="Lanka Shop"
-                width={75}
-                height={75}
-                className="object-contain h-12 w-auto sm:h-16"
-              />
-            </Link>
-=======
-      <header className="w-full bg-white text-black shadow-sm">
+      <header className={`w-full bg-white text-black fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled ? "shadow-md" : ""
+      }`}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="w-auto">
-              <Link href="/">
+            <div className="flex-shrink-0">
+              <Link href="/" className="block">
                 <Image
                     src="/lankaShop.jpeg"
                     alt="Lanka Shop"
-                    width={75}
-                    height={75}
+                    width={50}
+                    height={50}
                     className="object-contain h-12 w-auto sm:h-16"
+                    priority
                 />
               </Link>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8 text-sm tracking-wider">
-              <Link href="/ayurveda" className="hover:underline transition-colors">
-                AYURVEDIC
-              </Link>
-              <Link href="/handicraft" className="hover:underline transition-colors">
-                HANDICRAFT
-              </Link>
-              <Link href="/spices" className="hover:underline transition-colors">
-                SPICES
-              </Link>
-              <Link href="/tea" className="hover:underline transition-colors">
-                CEYLON TEA
-              </Link>
-              <div className="ml-4">
-                <ShoppingCart />
-              </div>
-              {/* User icon with conditional navigation */}
-              <a href="/user" onClick={handleUserClick} className="cursor-pointer">
-                <User />
-                {/* Optional: Show login status indicator */}
-                <span className="sr-only">{isLoggedIn ? "My Account" : "Login"}</span>
-              </a>
-            </nav>
-
-            {/* Mobile Navigation Toggle and Cart */}
-            <div className="flex md:hidden items-center space-x-4">
-              <ShoppingCart />
-              {/* Mobile user icon with conditional navigation */}
-              <a href="/user" onClick={handleUserClick} className="cursor-pointer">
-                <User size={20} />
-              </a>
-              <button
-                  className="text-sm tracking-wider flex items-center p-2"
-                  onClick={toggleMobileMenu}
-                  aria-label="Toggle menu"
-                  aria-expanded={isMobileMenuOpen}
-              >
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                <span className="ml-2 sr-only sm:not-sr-only">MENU</span>
-              </button>
-            </div>
->>>>>>> 97e250c29cdebd5a01fe66510ae59b3456a58f02
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8 text-sm tracking-wider">
-            {categories.map((cat) => {
-              const slug = cat.name.split(" ")[0].toLowerCase();
-              return (
-                <Link
-                  key={cat.id}
-                  href={`/categories/${cat.id}`}
-                  className="hover:underline transition-colors"
-                >
-                  {cat.name.toUpperCase()}
-                </Link>
-              );
-            })}
-            <div className="ml-4">
-              <ShoppingCart />
-            </div>
-            <a
-              href="#"
-              onClick={handleUserClick}
-              className="cursor-pointer flex items-center"
-            >
-              <User />
-              <span className="sr-only">
-                {isLoggedIn ? "My Account" : "Login"}
-              </span>
-            </a>
-          </nav>
-
-          {/* Mobile Toggle & Icons */}
-          <div className="flex md:hidden items-center space-x-4">
-            <ShoppingCart />
-            <a href="#" onClick={handleUserClick} className="cursor-pointer">
-              <User size={20} />
-            </a>
-            <button
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-              aria-expanded={isMobileMenuOpen}
-              className="p-2"
-            >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t mt-2">
-            <nav className="flex flex-col">
-              {categories.map((cat) => {
-                const slug = cat.name.split(" ")[0].toLowerCase();
-                return (
+            <nav className="hidden md:flex items-center space-x-8 ml-10">
+              {categories.map((cat) => (
                   <Link
-                    key={cat.id}
-                    href={`/categories/${cat.id}`}
-                    className="hover:bg-gray-50 transition-colors py-3 px-2"
-                    onClick={closeMobileMenu}
+                      key={cat.id}
+                      href={`/categories/${cat.id}`}
+                      className="text-sm font-medium tracking-wider py-2 border-b-2 border-transparent hover:border-black transition-colors duration-200"
                   >
                     {cat.name.toUpperCase()}
                   </Link>
-                );
-              })}
+              ))}
             </nav>
+
+            {/* Desktop Right Icons */}
+            <div className="hidden md:flex items-center space-x-6">
+              <ShoppingCart />
+              <button
+                  onClick={handleUserClick}
+                  className="flex items-center space-x-1 hover:text-gray-600 transition-colors"
+                  aria-label={isLoggedIn ? "My Account" : "Login"}
+              >
+                <User size={20} />
+                <span className="text-sm font-medium">{isLoggedIn ? "Account" : "Login"}</span>
+              </button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex md:hidden items-center space-x-4">
+              <ShoppingCart />
+              <button
+                  onClick={handleUserClick}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  aria-label={isLoggedIn ? "My Account" : "Login"}
+              >
+                <User size={20} />
+              </button>
+              <button
+                  onClick={toggleMobileMenu}
+                  aria-label="Toggle menu"
+                  aria-expanded={isMobileMenuOpen}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+            <div
+                className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                onClick={closeMobileMenu}
+                aria-hidden="true"
+            />
         )}
-      </div>
-    </header>
-  );
+
+        {/* Mobile Menu Drawer */}
+        <div
+            className={`fixed top-0 right-0 h-full w-[280px] bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out md:hidden ${
+                isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+        >
+          <div className="flex justify-between items-center p-4 border-b">
+            <h2 className="font-bold text-lg">Menu</h2>
+            <button
+                onClick={closeMobileMenu}
+                aria-label="Close menu"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <nav className="py-4">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Categories</div>
+            {categories.map((cat) => (
+                <Link
+                    key={cat.id}
+                    href={`/categories/${cat.id}`}
+                    className="block px-4 py-3 hover:bg-gray-50 transition-colors text-sm font-medium"
+                    onClick={closeMobileMenu}
+                >
+                  {cat.name.toUpperCase()}
+                </Link>
+            ))}
+
+            <div className="border-t my-4"></div>
+
+            <Link
+                href={isLoggedIn ? "/user" : "/login"}
+                className="flex items-center px-4 py-3 hover:bg-gray-50"
+                onClick={closeMobileMenu}
+            >
+              <User size={18} className="mr-3" />
+              <span className="text-sm font-medium">{isLoggedIn ? "My Account" : "Login / Register"}</span>
+            </Link>
+          </nav>
+        </div>
+      </header>
+  )
 }

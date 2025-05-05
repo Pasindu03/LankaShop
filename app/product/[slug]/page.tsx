@@ -143,8 +143,7 @@ export default function ProductPage() {
   return (
     <main>
       <Navbar />
-
-      <div className="container mx-auto pt-7 px-4 py-8">
+      <div className="container mx-auto pt-28 px-4 py-8">
         {/* Breadcrumb */}
         <div className="mb-6">
           <Breadcrumb items={breadcrumbItems} />

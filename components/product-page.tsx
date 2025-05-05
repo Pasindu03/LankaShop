@@ -162,7 +162,7 @@ export default function ProductPage({
     <div className="min-h-screen bg-white">
       {/* Hero section */}
       <div className="relative">
-        <div className="w-full h-64 md:h-80 relative">
+        <div className="w-full h-96 md:h-96 relative">
           <Image
             src={heroImage || "/placeholder.svg?height=800&width=1920"}
             alt={`${title} hero`}
@@ -170,7 +170,7 @@ export default function ProductPage({
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-center">
+          <div className="absolute inset-0 bg-black bg-opacity-40 pt-20 flex flex-col justify-center items-center">
             <h1 className="text-3xl md:text-4xl font-serif text-white">
               {title}
             </h1>
