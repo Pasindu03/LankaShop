@@ -11,3 +11,4 @@ export type Product = {
   stock: number
   tagIds: string[]
 }
+
