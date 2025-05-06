@@ -1,7 +1,6 @@
-// app/checkout/success/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import {Suspense, useEffect, useState} from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { CheckCircle, ShoppingBag } from "lucide-react";
@@ -72,6 +71,7 @@ export default function CheckoutSuccessPage() {
 
   return (
     <main>
+      <Suspense fallback={<div>Loading payment status…</div>}>
       <Navbar />
       <div className="container mx-auto px-4 py-16 text-center">
         <div className="max-w-md mx-auto">
@@ -97,6 +97,7 @@ export default function CheckoutSuccessPage() {
           </Link>
         </div>
       </div>
+      </Suspense>
     </main>
   );
 }
