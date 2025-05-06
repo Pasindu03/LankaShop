@@ -176,7 +176,6 @@ export default function Navbar() {
                 onClick={closeMobileMenu}
             >
               <User size={18} className="mr-3" />
-              <span className="text-sm font-medium">{isLoggedIn ? "My Account" : "Login / Register"}</span>
             </Link>
           </nav>
         </div>
