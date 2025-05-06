@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import {Suspense, useEffect, useState} from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/navbar";
 import { CheckCircle, ShoppingBag } from "lucide-react";
@@ -17,7 +17,6 @@ export default function CheckoutSuccessPage() {
 
     (async () => {
       try {
-        // 1) Fetch stripe session
         const stripeRes = await fetch(
           `/api/stripe-session?session_id=${sessionId}`
         );
@@ -72,30 +71,32 @@ export default function CheckoutSuccessPage() {
   return (
     <main>
       <Navbar />
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="max-w-md mx-auto">
-          <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
-          <h1 className="text-2xl md:text-3xl font-bold mb-4">
-            Order Confirmed!
-          </h1>
-          {saved ? (
-            <p className="text-gray-600 mb-8">
-              Thank you! Your order has been saved and is being processed.
-            </p>
-          ) : (
-            <p className="text-gray-600 mb-8">
-              Finalizing your order… please wait.
-            </p>
-          )}
-          <Link
-            href="/"
-            className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 inline-flex items-center"
-          >
-            <ShoppingBag size={18} className="mr-2" />
-            Continue Shopping
-          </Link>
+      <Suspense fallback={null}>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <div className="max-w-md mx-auto">
+            <CheckCircle size={64} className="text-green-500 mx-auto mb-6" />
+            <h1 className="text-2xl md:text-3xl font-bold mb-4">
+              Order Confirmed!
+            </h1>
+            {saved ? (
+                <p className="text-gray-600 mb-8">
+                  Thank you! Your order has been saved and is being processed.
+                </p>
+            ) : (
+                <p className="text-gray-600 mb-8">
+                  Finalizing your order… please wait.
+                </p>
+            )}
+            <Link
+                href="/"
+                className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800 inline-flex items-center"
+            >
+              <ShoppingBag size={18} className="mr-2" />
+              Continue Shopping
+            </Link>
+          </div>
         </div>
-      </div>
+      </Suspense>
     </main>
   );
 }
