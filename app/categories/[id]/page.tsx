@@ -1,5 +1,5 @@
 import Navbar from "@/components/navbar";
-import ProductPage from "@/components/product-page";
+import CategoryPage from "@/components/category-page";
 import { getCategoryById } from "@/lib/services/categoryService";
 import { getSubcategoriesByCategoryId } from "@/lib/services/subCategoryService";
 import { getProductsByCategory } from "@/lib/services/filteredProductService";
@@ -8,7 +8,7 @@ interface Props {
   params: { id: string };
 }
 
-export default async function CategoryPage({ params }: Props) {
+export default async function Page({ params }: Props) {
   const categoryId = params.id;
 
   // 1) Fetch category metadata
@@ -26,7 +26,7 @@ export default async function CategoryPage({ params }: Props) {
   return (
     <main>
       <Navbar />
-      <ProductPage
+      <CategoryPage
         title={category.name}
         description={category.description}
         products={products}

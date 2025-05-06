@@ -28,7 +28,7 @@ type CategoryMeta = {
 };
 
 export default function ProductPage() {
-  const { slug } = useParams(); // product ID
+  const { slug } = useParams();
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -40,16 +40,13 @@ export default function ProductPage() {
     if (!slug) return;
     async function fetchData() {
       try {
-        // 1) Fetch product document
         const prod = await getProduct(Array.isArray(slug) ? slug[0] : slug);
         if (!prod) {
           setProduct(null);
           return;
         }
-        // ensure we have the id field
         setProduct(prod);
 
-        // 2) Fetch category metadata
         const cat = await getCategoryById(prod.categoryId);
         if (cat) setCategory(cat);
       } catch (err) {
@@ -61,7 +58,6 @@ export default function ProductPage() {
     fetchData();
   }, [slug]);
 
-  // Loading & not-found states
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
@@ -78,7 +74,6 @@ export default function ProductPage() {
     );
   }
 
-  // Cart handlers
   const increment = () => setQuantity((q) => q + 1);
   const decrement = () => setQuantity((q) => Math.max(1, q - 1));
 
@@ -92,39 +87,6 @@ export default function ProductPage() {
       category: category?.name || "Uncategorized",
     });
     setQuantity(1);
-  };
-
-  // Rating renderer
-  const renderRating = (rating: number) => {
-    const stars = [];
-    const full = Math.floor(rating);
-    const half = rating % 1 >= 0.5;
-
-    for (let i = 0; i < full; i++) {
-      stars.push(
-        <Star
-          key={`star-${i}`}
-          className="fill-current text-yellow-400"
-          size={16}
-        />
-      );
-    }
-    if (half) {
-      stars.push(
-        <StarHalf
-          key="half-star"
-          className="fill-current text-yellow-400"
-          size={16}
-        />
-      );
-    }
-    const empty = 5 - stars.length;
-    for (let i = 0; i < empty; i++) {
-      stars.push(
-        <Star key={`empty-${i}`} className="text-gray-300" size={16} />
-      );
-    }
-    return stars;
   };
 
   // Breadcrumb items
@@ -164,14 +126,6 @@ export default function ProductPage() {
           {/* Details */}
           <div className="flex flex-col">
             <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
-
-            <div className="flex items-center mt-2 mb-4">
-              <div className="flex mr-2">{renderRating(product.rating)}</div>
-              <span className="text-sm text-gray-500">
-                ({product.reviews} reviews)
-              </span>
-            </div>
-
             <div className="text-2xl font-bold mb-6">
               £{parseFloat(product.price).toFixed(2)}
             </div>
