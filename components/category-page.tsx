@@ -1,122 +1,121 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight, Filter, Plus, X } from "lucide-react";
-import { Range, getTrackBackground } from "react-range";
-import type { Product } from "@/types/product";
-import Breadcrumb from "./breadcrumb";
-import { useCart } from "@/context/cart-context";
+import React, { useState, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { ChevronLeft, ChevronRight, Filter, Plus, X, Package } from 'lucide-react'
+import { Range, getTrackBackground } from "react-range"
+import type { Product } from "@/types/product"
+import Breadcrumb from "./breadcrumb"
+import { useCart } from "@/context/cart-context"
 
 type Category = {
-  id: string;
-  name: string;
-};
+  id: string
+  name: string
+}
 
 type ProductPageProps = {
-  title: string;
-  description: string;
-  products: Product[];
-  categories: Category[];
-  heroImage?: string;
-};
+  title: string
+  description: string
+  products: Product[]
+  categories: Category[]
+  heroImage?: string
+}
 
-export default function CategoryPage({title, description, products, categories, heroImage,}: ProductPageProps) {
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<string>("featured");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
+export default function CategoryPage({ title, description, products, categories, heroImage }: ProductPageProps) {
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(products)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [sortOption, setSortOption] = useState<string>("featured")
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [quantity, setQuantity] = useState(1)
+  const { addToCart } = useCart()
 
-  const productsPerPage = 8;
+  const productsPerPage = 8
 
   // Re-filter & sort whenever inputs change
   useEffect(() => {
-    let result = [...products];
+    let result = [...products]
 
     // price filter
     result = result.filter((p) => {
-      const price = parseFloat(p.price as unknown as string);
-      return price >= priceRange[0] && price <= priceRange[1];
-    });
+      const price = parseFloat(p.price as unknown as string)
+      return price >= priceRange[0] && price <= priceRange[1]
+    })
 
     // category filter
     if (selectedCategories.length) {
-      result = result.filter((p) =>
-          selectedCategories.includes((p as any).subcategoryId)
-      );
+      result = result.filter((p) => selectedCategories.includes((p as any).subcategoryId))
     }
 
     // sorting
     switch (sortOption) {
       case "price-low":
         result.sort(
-            (a, b) =>
-                parseFloat(a.price as unknown as string) -
-                parseFloat(b.price as unknown as string)
-        );
-        break;
+            (a, b) => parseFloat(a.price as unknown as string) - parseFloat(b.price as unknown as string),
+        )
+        break
       case "price-high":
         result.sort(
-            (a, b) =>
-                parseFloat(b.price as unknown as string) -
-                parseFloat(a.price as unknown as string)
-        );
-        break;
+            (a, b) => parseFloat(b.price as unknown as string) - parseFloat(a.price as unknown as string),
+        )
+        break
       case "rating":
-        result.sort((a, b) => b.rating - a.rating);
-        break;
+        result.sort((a, b) => b.rating - a.rating)
+        break
       case "newest":
-        result.sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        break;
+        result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        break
       default:
-        break;
+        break
     }
 
-    setFilteredProducts(result);
-    setCurrentPage(1);
-  }, [products, priceRange, selectedCategories, sortOption]);
+    setFilteredProducts(result)
+    setCurrentPage(1)
+  }, [products, priceRange, selectedCategories, sortOption])
 
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(
-      indexOfFirstProduct,
-      indexOfLastProduct
-  );
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage)
+  const indexOfLastProduct = currentPage * productsPerPage
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct)
 
   const toggleCategory = (categoryId: string) => {
     setSelectedCategories((prev) =>
-        prev.includes(categoryId)
-            ? prev.filter((id) => id !== categoryId)
-            : [...prev, categoryId]
-    );
-  };
+        prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId],
+    )
+  }
 
   const resetFilters = () => {
-    setPriceRange([0, 100]);
-    setSelectedCategories([]);
-    setSortOption("featured");
-  };
+    setPriceRange([0, 100])
+    setSelectedCategories([])
+    setSortOption("featured")
+  }
 
   const getBreadcrumbPath = () => {
-    const map: Record<string, string> = {};
-    return map[title] || "/";
-  };
+    const map: Record<string, string> = {}
+    return map[title] || "/"
+  }
 
   // helper to look up category name from subcategoryId on product
   const getCategoryName = (product: Product) => {
-    const cat = categories.find(
-        (c) => c.id === (product as any).subcategoryId
-    );
-    return cat?.name || "Uncategorized";
-  };
+    const cat = categories.find((c) => c.id === (product as any).subcategoryId)
+    return cat?.name || "Uncategorized"
+  }
+
+  // Get the primary image for a product
+  const getProductImage = (product: Product) => {
+    return (product as any).image1 || (product as any).image || "/placeholder.svg"
+  }
+
+  // Get the number of images for a product
+  const getImageCount = (product: Product) => {
+    let count = 0
+    if ((product as any).image1) count++
+    if ((product as any).image2) count++
+    if ((product as any).image3) count++
+    return count
+  }
 
   const handleAddToCart = (product: Product) => {
     addToCart({
@@ -124,11 +123,11 @@ export default function CategoryPage({title, description, products, categories, 
       name: product.name,
       price: parseFloat(product.price as unknown as string),
       quantity,
-      image: product.image || "/placeholder.svg",
+      image: getProductImage(product),
       category: getCategoryName(product),
-    });
-    setQuantity(1);
-  };
+    })
+    setQuantity(1)
+  }
 
   return (
       <div className="min-h-screen bg-white">
@@ -195,10 +194,7 @@ export default function CategoryPage({title, description, products, categories, 
                 </div>
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="font-medium">Filters</h2>
-                  <button
-                      onClick={resetFilters}
-                      className="text-sm text-gray-500 hover:text-black"
-                  >
+                  <button onClick={resetFilters} className="text-sm text-gray-500 hover:text-black">
                     Reset
                   </button>
                 </div>
@@ -371,11 +367,11 @@ export default function CategoryPage({title, description, products, categories, 
             </div>
 
             {/* Product Grid */}
-            <section className="flex-1">{/* ...product grid unchanged... */}
+            <section className="flex-1">
               <div className="mb-6">
                 <p className="text-sm text-gray-500">
-                  Showing {indexOfFirstProduct + 1}-
-                  {Math.min(indexOfLastProduct, filteredProducts.length)} of {filteredProducts.length} products
+                  Showing {indexOfFirstProduct + 1}-{Math.min(indexOfLastProduct, filteredProducts.length)} of{" "}
+                  {filteredProducts.length} products
                 </p>
               </div>
 
@@ -399,11 +395,16 @@ export default function CategoryPage({title, description, products, categories, 
                           <div className="relative h-64">
                             <Link href={`/product/${product.id}`}>
                               <Image
-                                  src={product.image || "/placeholder.svg"}
+                                  src={getProductImage(product) || "/placeholder.svg"}
                                   alt={product.name}
                                   fill
                                   className="object-cover"
                               />
+                              {getImageCount(product) > 1 && (
+                                  <div className="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full px-2 py-1 text-xs font-medium">
+                                    {getImageCount(product)} images
+                                  </div>
+                              )}
                             </Link>
                             <button
                                 onClick={() => handleAddToCart(product)}
@@ -415,9 +416,19 @@ export default function CategoryPage({title, description, products, categories, 
                           </div>
                           <div className="p-4">
                             <h3 className="font-medium">{product.name}</h3>
-                            <p className="mt-2 font-medium">
-                              £{parseFloat(product.price as unknown as string).toFixed(2)}
-                            </p>
+                            <div className="flex justify-between items-center mt-2">
+                              <p className="font-medium">
+                                £{parseFloat(product.price as unknown as string).toFixed(2)}
+                              </p>
+                              <div className="flex items-center text-sm">
+                                <Package size={14} className="mr-1" />
+                                {parseInt((product as any).stock) > 0 ? (
+                                    <span className="text-green-600">{(product as any).stock} in stock</span>
+                                ) : (
+                                    <span className="text-red-500">Out of stock</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                     ))}
@@ -443,9 +454,7 @@ export default function CategoryPage({title, description, products, categories, 
                             key={page}
                             onClick={() => setCurrentPage(page)}
                             className={`w-10 h-10 rounded-md ${
-                                currentPage === page
-                                    ? "bg-black text-white"
-                                    : "text-gray-700 hover:bg-gray-100"
+                                currentPage === page ? "bg-black text-white" : "text-gray-700 hover:bg-gray-100"
                             }`}
                         >
                           {page}
@@ -468,5 +477,5 @@ export default function CategoryPage({title, description, products, categories, 
           </div>
         </div>
       </div>
-  );
+  )
 }
