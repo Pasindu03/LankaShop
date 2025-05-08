@@ -9,6 +9,8 @@ export type CartItem = {
     quantity: number
     image: string
     category: string
+    weight: number
+    weightUnit : string
 }
 
 type CartContextType = {

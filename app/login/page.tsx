@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FcGoogle } from "react-icons/fc"
+import {ChevronLeft} from "lucide-react";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("")
@@ -78,9 +79,6 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="password">Password</Label>
-                                <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-                                    Forgot password?
-                                </Link>
                             </div>
                             <Input
                                 id="password"

@@ -1,9 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Filter, Plus, X, Package } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Plus, X, Package, Scale } from "lucide-react"
 import { Range, getTrackBackground } from "react-range"
 import type { Product } from "@/types/product"
 import Breadcrumb from "./breadcrumb"
@@ -40,7 +40,7 @@ export default function CategoryPage({ title, description, products, categories,
 
     // price filter
     result = result.filter((p) => {
-      const price = parseFloat(p.price as unknown as string)
+      const price = Number.parseFloat(p.price as unknown as string)
       return price >= priceRange[0] && price <= priceRange[1]
     })
 
@@ -53,12 +53,12 @@ export default function CategoryPage({ title, description, products, categories,
     switch (sortOption) {
       case "price-low":
         result.sort(
-            (a, b) => parseFloat(a.price as unknown as string) - parseFloat(b.price as unknown as string),
+            (a, b) => Number.parseFloat(a.price as unknown as string) - Number.parseFloat(b.price as unknown as string),
         )
         break
       case "price-high":
         result.sort(
-            (a, b) => parseFloat(b.price as unknown as string) - parseFloat(a.price as unknown as string),
+            (a, b) => Number.parseFloat(b.price as unknown as string) - Number.parseFloat(a.price as unknown as string),
         )
         break
       case "rating":
@@ -108,23 +108,43 @@ export default function CategoryPage({ title, description, products, categories,
     return (product as any).image1 || (product as any).image || "/placeholder.svg"
   }
 
-  // Get the number of images for a product
-  const getImageCount = (product: Product) => {
-    let count = 0
-    if ((product as any).image1) count++
-    if ((product as any).image2) count++
-    if ((product as any).image3) count++
-    return count
+  const getWeight = (product: Product) => {
+    return (product as any).weight || ""
+  }
+
+  const getWeightUnit = (products: Product) => {
+    return (products as any).weightUnit || "g"
+  }
+
+  // Get all product images
+  const getProductImages = (product: Product) => {
+    const images = []
+    if ((product as any).image) images.push((product as any).image)
+    if ((product as any).image1) images.push((product as any).image1)
+    if ((product as any).image2) images.push((product as any).image2)
+    if ((product as any).image3) images.push((product as any).image3)
+    return images.filter(Boolean)
+  }
+
+  // Format weight with unit
+  const formatWeight = (product: Product) => {
+    const weight = (product as any).weight
+    const unit = (product as any).weightUnit || "g"
+
+    if (!weight) return null
+    return `${weight} ${unit}`
   }
 
   const handleAddToCart = (product: Product) => {
     addToCart({
       id: product.id,
       name: product.name,
-      price: parseFloat(product.price as unknown as string),
+      price: Number.parseFloat(product.price as unknown as string),
       quantity,
       image: getProductImage(product),
       category: getCategoryName(product),
+      weight: getWeight(product),
+      weightUnit: getWeightUnit(product),
     })
     setQuantity(1)
   }
@@ -171,10 +191,7 @@ export default function CategoryPage({ title, description, products, categories,
                   <option value="rating">Highest Rated</option>
                   <option value="newest">Newest</option>
                 </select>
-                <ChevronRight
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 -rotate-90"
-                    size={16}
-                />
+                <ChevronRight className="absolute right-2 top-1/2 transform -translate-y-1/2 -rotate-90" size={16} />
               </div>
             </div>
 
@@ -229,10 +246,7 @@ export default function CategoryPage({ title, description, products, categories,
                           </div>
                       )}
                       renderThumb={({ props }) => (
-                          <div
-                              {...props}
-                              className="h-4 w-4 rounded-full bg-white border border-gray-400 shadow-sm"
-                          />
+                          <div {...props} className="h-4 w-4 rounded-full bg-white border border-gray-400 shadow-sm" />
                       )}
                   />
                 </div>
@@ -322,10 +336,7 @@ export default function CategoryPage({ title, description, products, categories,
                             </div>
                         )}
                         renderThumb={({ props }) => (
-                            <div
-                                {...props}
-                                className="h-4 w-4 rounded-full bg-white border border-gray-400 shadow-sm"
-                            />
+                            <div {...props} className="h-4 w-4 rounded-full bg-white border border-gray-400 shadow-sm" />
                         )}
                     />
                   </div>
@@ -349,10 +360,7 @@ export default function CategoryPage({ title, description, products, categories,
                   </div>
 
                   <div className="flex gap-2 mt-8">
-                    <button
-                        onClick={resetFilters}
-                        className="flex-1 border border-gray-300 py-2 rounded-md text-sm"
-                    >
+                    <button onClick={resetFilters} className="flex-1 border border-gray-300 py-2 rounded-md text-sm">
                       Reset
                     </button>
                     <button
@@ -378,10 +386,7 @@ export default function CategoryPage({ title, description, products, categories,
               {currentProducts.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-gray-500">No products match your filters.</p>
-                    <button
-                        onClick={resetFilters}
-                        className="mt-4 bg-black text-white px-6 py-2 rounded-md text-sm"
-                    >
+                    <button onClick={resetFilters} className="mt-4 bg-black text-white px-6 py-2 rounded-md text-sm">
                       Reset Filters
                     </button>
                   </div>
@@ -400,11 +405,6 @@ export default function CategoryPage({ title, description, products, categories,
                                   fill
                                   className="object-cover"
                               />
-                              {getImageCount(product) > 1 && (
-                                  <div className="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full px-2 py-1 text-xs font-medium">
-                                    {getImageCount(product)} images
-                                  </div>
-                              )}
                             </Link>
                             <button
                                 onClick={() => handleAddToCart(product)}
@@ -418,17 +418,24 @@ export default function CategoryPage({ title, description, products, categories,
                             <h3 className="font-medium">{product.name}</h3>
                             <div className="flex justify-between items-center mt-2">
                               <p className="font-medium">
-                                £{parseFloat(product.price as unknown as string).toFixed(2)}
+                                £{Number.parseFloat(product.price as unknown as string).toFixed(2)}
                               </p>
                               <div className="flex items-center text-sm">
                                 <Package size={14} className="mr-1" />
-                                {parseInt((product as any).stock) > 0 ? (
+                                {Number.parseInt((product as any).stock) > 0 ? (
                                     <span className="text-green-600">{(product as any).stock} in stock</span>
                                 ) : (
                                     <span className="text-red-500">Out of stock</span>
                                 )}
                               </div>
                             </div>
+
+                            {formatWeight(product) && (
+                                <div className="flex items-center mt-1 text-sm text-gray-600">
+                                  <Scale size={14} className="mr-1" />
+                                  <span>{formatWeight(product)}</span>
+                                </div>
+                            )}
                           </div>
                         </div>
                     ))}
@@ -442,9 +449,7 @@ export default function CategoryPage({ title, description, products, categories,
                         onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                         disabled={currentPage === 1}
                         className={`p-2 rounded-md ${
-                            currentPage === 1
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-gray-100"
+                            currentPage === 1 ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-100"
                         }`}
                     >
                       <ChevronLeft size={20} />
@@ -464,9 +469,7 @@ export default function CategoryPage({ title, description, products, categories,
                         onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                         disabled={currentPage === totalPages}
                         className={`p-2 rounded-md ${
-                            currentPage === totalPages
-                                ? "text-gray-400 cursor-not-allowed"
-                                : "text-gray-700 hover:bg-gray-100"
+                            currentPage === totalPages ? "text-gray-400 cursor-not-allowed" : "text-gray-700 hover:bg-gray-100"
                         }`}
                     >
                       <ChevronRight size={20} />

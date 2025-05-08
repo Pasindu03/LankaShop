@@ -12,7 +12,7 @@ import {
 } from "react"
 import Image from "next/image"
 import { useParams } from "next/navigation"
-import { Minus, Plus, ShoppingBag, Package, ChevronLeft, ChevronRight } from "lucide-react"
+import { Minus, Plus, ShoppingBag, Package, ChevronLeft, ChevronRight, Scale } from "lucide-react"
 import Breadcrumb from "@/components/breadcrumb"
 import Navbar from "@/components/navbar"
 import { useCart } from "@/context/cart-context"
@@ -93,12 +93,21 @@ export default function ProductPage() {
   // Get all product images
   const getProductImages = () => {
     const images = []
+    if ((product as any).image) images.push((product as any).image)
     if ((product as any).image1) images.push((product as any).image1)
     if ((product as any).image2) images.push((product as any).image2)
     if ((product as any).image3) images.push((product as any).image3)
-    if (images.length === 0 && product.image) images.push(product.image)
     if (images.length === 0) images.push("/placeholder.svg")
-    return images
+    return images.filter(Boolean) // Remove any undefined or null values
+  }
+
+  // Format weight with unit
+  const formatWeight = () => {
+    const weight = (product as any).weight
+    const unit = (product as any).weightUnit || "g"
+
+    if (!weight) return null
+    return `${weight} ${unit}`
   }
 
   const productImages = getProductImages()
@@ -191,13 +200,22 @@ export default function ProductPage() {
               <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
               <div className="text-2xl font-bold mb-2">£{Number.parseFloat(product.price).toFixed(2)}</div>
 
-              {/* Stock Information */}
-              <div className="flex items-center mb-6">
-                <Package size={18} className="mr-2" />
-                {Number.parseInt((product as any).stock) > 0 ? (
-                    <span className="text-green-600 font-medium">{(product as any).stock} in stock</span>
-                ) : (
-                    <span className="text-red-500 font-medium">Out of stock</span>
+              {/* Stock and Weight Information */}
+              <div className="flex flex-col space-y-2 mb-6">
+                <div className="flex items-center">
+                  <Package size={18} className="mr-2" />
+                  {Number.parseInt((product as any).stock) > 0 ? (
+                      <span className="text-green-600 font-medium">{(product as any).stock} in stock</span>
+                  ) : (
+                      <span className="text-red-500 font-medium">Out of stock</span>
+                  )}
+                </div>
+
+                {formatWeight() && (
+                    <div className="flex items-center">
+                      <Scale size={18} className="mr-2" />
+                      <span className="font-medium">{formatWeight()}</span>
+                    </div>
                 )}
               </div>
 

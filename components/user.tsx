@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit, ChevronLeft} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Package, ShoppingBag, MapPin, Phone, Mail, Clock, Upload, X, Check, Edit, ChevronLeft } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { doc, getDoc, updateDoc, setDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore"
-import { db, storage } from "@/lib/firebase"
+import { db, storage, auth } from "@/lib/firebase"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
+import { signOut } from "firebase/auth"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -16,11 +18,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import Link from "next/link";
+import Link from "next/link"
 
 export default function UserAccount() {
     const { currentUser } = useAuth()
     const [isLoading, setIsLoading] = useState(true)
+    const router = useRouter()
 
     // Customer data with state
     const [customer, setCustomer] = useState({
@@ -236,6 +239,19 @@ export default function UserAccount() {
         setIsEditing(false)
     }
 
+    // Handle logout
+    const handleLogout = async () => {
+        try {
+            setIsLoading(true)
+            await signOut(auth)
+            router.push("/")
+        } catch (error) {
+            console.error("Error logging out:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[60vh]">
@@ -406,6 +422,9 @@ export default function UserAccount() {
                                     <Button variant="outline" className="w-full mt-6" onClick={() => setIsEditing(true)}>
                                         <Edit className="h-4 w-4 mr-2" />
                                         Edit Profile
+                                    </Button>
+                                    <Button variant="destructive" className="w-full mt-2" onClick={handleLogout}>
+                                        Log Out
                                     </Button>
                                 </>
                             )}
