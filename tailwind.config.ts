@@ -1,8 +1,7 @@
 import type { Config } from "tailwindcss"
-import tailwindcssAnimate from "tailwindcss-animate"
 
 const config = {
-  darkMode: "class",
+  darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -20,10 +19,6 @@ const config = {
       },
     },
     extend: {
-      fontFamily: {
-        sans: ["var(--font-nunito-sans)", "sans-serif"],
-        serif: ["var(--font-playfair-display)", "serif"],
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -31,12 +26,12 @@ const config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#8D3F2D", // Deep terracotta red
+          foreground: "#F5EFE0", // Warm cream
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#D9A566", // Golden amber
+          foreground: "#1A1209", // Deep brown
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -47,8 +42,8 @@ const config = {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#2D5E3D", // Forest green
+          foreground: "#F5EFE0", // Warm cream
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -73,15 +68,35 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "pulse-glow": {
+          "0%, 100%": {
+            opacity: "0.6",
+            boxShadow: "0 0 5px 2px rgba(217, 165, 102, 0.3)",
+          },
+          "50%": {
+            opacity: "1",
+            boxShadow: "0 0 15px 5px rgba(217, 165, 102, 0.6)",
+          },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 1.5s ease-out",
+        "pulse-glow": "pulse-glow 3s infinite",
+        float: "float 6s ease-in-out infinite",
       },
     },
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
 export default config
-

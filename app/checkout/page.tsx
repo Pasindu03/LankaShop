@@ -10,6 +10,7 @@ import { Minus, Plus, Trash2, ArrowLeft, CreditCard, Scale } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import Navbar from "@/components/navbar"
 import { loadStripe } from "@stripe/stripe-js"
+import { motion } from "framer-motion"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)
 
@@ -124,18 +125,39 @@ export default function CheckoutPage() {
         }
     }
 
+    // Sri Lankan pattern background (subtle)
+    const pattern =
+        "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23815c3d' fillOpacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")"
+
+    // Animation variants
+    const fadeIn = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { duration: 0.5 } },
+    }
+
+    const slideUp = {
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+    }
+
     if (cartItems.length === 0) {
         return (
-            <main>
+            <main className="min-h-screen bg-[#1A1209] text-[#F5EFE0]" style={{ backgroundImage: pattern }}>
                 <Navbar />
                 <div className="container mx-auto px-4 pt-20 py-16 text-center">
-                    <div className="max-w-md mx-auto">
-                        <h1 className="text-2xl font-bold mb-4">Your Cart is Empty</h1>
-                        <p className="text-gray-600 mb-8">Looks like you haven&apos;t added any products to your cart yet.</p>
-                        <Link href="/" className="bg-black text-white px-6 py-3 rounded hover:bg-gray-800">
-                            Continue Shopping
+                    <motion.div className="max-w-md mx-auto" initial="hidden" animate="visible" variants={fadeIn}>
+                        <h1 className="text-2xl font-bold mb-4 text-[#D9A566]">Your Cart is Empty</h1>
+                        <p className="text-[#F5EFE0]/80 mb-8">Looks like you haven&apos;t added any products to your cart yet.</p>
+                        <Link href="/">
+                            <motion.div
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="inline-block bg-[#8D3F2D] text-[#F5EFE0] px-6 py-3 rounded hover:bg-[#C14D33] transition-colors"
+                            >
+                                Continue Shopping
+                            </motion.div>
                         </Link>
-                    </div>
+                    </motion.div>
                 </div>
             </main>
         )
@@ -160,51 +182,64 @@ export default function CheckoutPage() {
     }
 
     return (
-        <main>
+        <main className="min-h-screen bg-[#1A1209] text-[#F5EFE0]" style={{ backgroundImage: pattern }}>
             <Navbar />
             <div className="container mx-auto pt-28 px-4 py-8">
-                <h1 className="text-2xl md:text-3xl font-bold mb-8">Checkout</h1>
+                <motion.h1
+                    className="text-2xl md:text-3xl font-bold mb-8 text-[#D9A566]"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    Checkout
+                </motion.h1>
 
                 <div className="grid md:grid-cols-3 gap-8">
                     {/* Cart Items (Left Column) */}
-                    <div className="md:col-span-2">
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-xl font-semibold mb-4">Your Cart</h2>
+                    <motion.div className="md:col-span-2" initial="hidden" animate="visible" variants={slideUp}>
+                        <div className="bg-[#2A1A0A]/80 rounded-lg shadow p-6 border border-[#D9A566]/20">
+                            <h2 className="text-xl font-semibold mb-4 text-[#D9A566]">Your Cart</h2>
 
-                            <div className="divide-y">
-                                {cartItems.map((item) => (
-                                    <div key={item.id} className="py-4 flex items-start">
-                                        <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 relative">
+                            <div className="divide-y divide-[#D9A566]/20">
+                                {cartItems.map((item, index) => (
+                                    <motion.div
+                                        key={item.id}
+                                        className="py-4 flex items-start"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                                    >
+                                        <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border border-[#D9A566]/30 relative">
                                             <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
                                         </div>
 
                                         <div className="ml-4 flex-1">
                                             <div className="flex justify-between">
-                                                <h3 className="font-medium">{item.name}</h3>
-                                                <p className="font-medium">£{(item.price * item.quantity).toFixed(2)}</p>
+                                                <h3 className="font-medium text-[#F5EFE0]">{item.name}</h3>
+                                                <p className="font-medium text-[#D9A566]">£{(item.price * item.quantity).toFixed(2)}</p>
                                             </div>
-                                            <p className="text-sm text-gray-500 mt-1">£{item.price.toFixed(2)} each</p>
+                                            <p className="text-sm text-[#F5EFE0]/70 mt-1">£{item.price.toFixed(2)} each</p>
 
                                             {item.weight && item.weightUnit && (
-                                                <p className="text-sm text-gray-500 mt-1 flex items-center">
-                                                    <Scale size={14} className="mr-1" />
+                                                <p className="text-sm text-[#F5EFE0]/70 mt-1 flex items-center">
+                                                    <Scale size={14} className="mr-1 text-[#D9A566]" />
                                                     {item.weight} {item.weightUnit} × {item.quantity}
                                                 </p>
                                             )}
 
                                             <div className="flex items-center justify-between mt-2">
-                                                <div className="flex items-center border rounded">
+                                                <div className="flex items-center border border-[#D9A566]/30 rounded bg-[#1A1209]/50">
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                        className="p-1 hover:bg-gray-100"
+                                                        className="p-1 hover:bg-[#1A1209] text-[#F5EFE0]"
                                                         disabled={item.quantity <= 1}
                                                     >
                                                         <Minus size={14} />
                                                     </button>
-                                                    <span className="px-2 text-sm">{item.quantity}</span>
+                                                    <span className="px-2 text-sm text-[#F5EFE0]">{item.quantity}</span>
                                                     <button
                                                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                        className="p-1 hover:bg-gray-100"
+                                                        className="p-1 hover:bg-[#1A1209] text-[#F5EFE0]"
                                                     >
                                                         <Plus size={14} />
                                                     </button>
@@ -212,80 +247,92 @@ export default function CheckoutPage() {
 
                                                 <button
                                                     onClick={() => removeItem(item.id)}
-                                                    className="text-sm text-red-500 hover:text-red-700 flex items-center"
+                                                    className="text-sm text-[#C14D33] hover:text-[#8D3F2D] flex items-center"
                                                 >
                                                     <Trash2 size={14} className="mr-1" />
                                                     Remove
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
 
-                            <div className="mt-6 border-t pt-4">
-                                <Link href="/" className="text-black hover:underline flex items-center">
+                            <div className="mt-6 border-t border-[#D9A566]/20 pt-4">
+                                <Link href="/" className="text-[#D9A566] hover:text-[#F5EFE0] transition-colors flex items-center">
                                     <ArrowLeft size={16} className="mr-2" />
                                     Continue Shopping
                                 </Link>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Order Summary (Right Column) */}
-                    <div className="md:col-span-1">
-                        <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-                            <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                    <motion.div
+                        className="md:col-span-1"
+                        initial="hidden"
+                        animate="visible"
+                        variants={slideUp}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <div className="bg-[#2A1A0A]/80 rounded-lg shadow p-6 sticky top-6 border border-[#D9A566]/20">
+                            <h2 className="text-xl font-semibold mb-4 text-[#D9A566]">Order Summary</h2>
 
                             <div className="space-y-3">
                                 <div className="flex justify-between">
-                                    <p className="text-gray-600">Subtotal</p>
-                                    <p>£{subtotal.toFixed(2)}</p>
+                                    <p className="text-[#F5EFE0]/80">Subtotal</p>
+                                    <p className="text-[#F5EFE0]">£{subtotal.toFixed(2)}</p>
                                 </div>
 
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <p className="text-gray-600">Shipping</p>
+                                        <p className="text-[#F5EFE0]/80">Shipping</p>
                                         {totalWeight > 0 && (
-                                            <div className="flex items-center text-xs text-gray-500 mt-1">
-                                                <Scale size={12} className="mr-1" />
+                                            <div className="flex items-center text-xs text-[#F5EFE0]/60 mt-1">
+                                                <Scale size={12} className="mr-1 text-[#D9A566]" />
                                                 {formattedWeight}
                                             </div>
                                         )}
                                     </div>
                                     <div className="text-right">
-                                        <p>{shippingCost === 0 ? "Free" : `£${shippingCost.toFixed(2)}`}</p>
-                                        <p className="text-xs text-gray-500 mt-1">{getShippingDescription()}</p>
+                                        <p className="text-[#F5EFE0]">{shippingCost === 0 ? "Free" : `£${shippingCost.toFixed(2)}`}</p>
+                                        <p className="text-xs text-[#F5EFE0]/60 mt-1">{getShippingDescription()}</p>
                                     </div>
                                 </div>
 
-                                <div className="border-t pt-3 mt-3">
+                                <div className="border-t border-[#D9A566]/20 pt-3 mt-3">
                                     <div className="flex justify-between font-semibold">
-                                        <p>Total</p>
-                                        <p>£{totalCost.toFixed(2)}</p>
+                                        <p className="text-[#F5EFE0]">Total</p>
+                                        <p className="text-[#D9A566]">£{totalCost.toFixed(2)}</p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">Including VAT</p>
+                                    <p className="text-xs text-[#F5EFE0]/60 mt-1">Including VAT</p>
                                 </div>
                             </div>
 
-                            <div className="mt-4 p-3 bg-gray-50 rounded-md text-xs text-gray-600">
-                                <h3 className="font-medium mb-1">Shipping Cost Breakdown:</h3>
+                            <div className="mt-4 p-3 bg-[#1A1209]/50 rounded-md text-xs text-[#F5EFE0]/70">
+                                <h3 className="font-medium mb-1 text-[#D9A566]">Shipping Cost Breakdown:</h3>
                                 <ul className="space-y-1">
-                                    <li className={shippingTier === "tier1" ? "font-medium" : ""}>• Up to 500g: £5.00</li>
-                                    <li className={shippingTier === "tier2" ? "font-medium" : ""}>• 500g to 1.75kg: £4.25</li>
-                                    <li className={shippingTier === "tier3" ? "font-medium" : ""}>• 1.75kg to 3kg: £7.00</li>
-                                    <li className={shippingTier === "tier4" ? "font-medium" : ""}>• 3kg to 5kg: £4.00</li>
-                                    <li className={shippingTier === "tier5" ? "font-medium" : ""}>• Above 5kg: Free</li>
+                                    <li className={shippingTier === "tier1" ? "font-medium text-[#D9A566]" : ""}>• Up to 500g: £5.00</li>
+                                    <li className={shippingTier === "tier2" ? "font-medium text-[#D9A566]" : ""}>
+                                        • 500g to 1.75kg: £4.25
+                                    </li>
+                                    <li className={shippingTier === "tier3" ? "font-medium text-[#D9A566]" : ""}>
+                                        • 1.75kg to 3kg: £7.00
+                                    </li>
+                                    <li className={shippingTier === "tier4" ? "font-medium text-[#D9A566]" : ""}>• 3kg to 5kg: £4.00</li>
+                                    <li className={shippingTier === "tier5" ? "font-medium text-[#D9A566]" : ""}>• Above 5kg: Free</li>
                                 </ul>
                             </div>
 
                             <form onSubmit={handleCheckout} className="mt-6 space-y-4">
-                                <button
+                                <motion.button
                                     type="submit"
                                     disabled={isProcessing}
-                                    className={`w-full bg-black text-white py-3 px-6 rounded flex items-center justify-center ${
-                                        isProcessing ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-800"
+                                    className={`w-full bg-[#8D3F2D] text-[#F5EFE0] py-3 px-6 rounded flex items-center justify-center ${
+                                        isProcessing ? "opacity-70 cursor-not-allowed" : "hover:bg-[#C14D33]"
                                     }`}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                 >
                                     {isProcessing ? (
                                         "Processing..."
@@ -295,14 +342,14 @@ export default function CheckoutPage() {
                                             Complete Order
                                         </>
                                     )}
-                                </button>
+                                </motion.button>
                             </form>
 
-                            <div className="mt-4 text-xs text-gray-500">
+                            <div className="mt-4 text-xs text-[#F5EFE0]/60">
                                 <p>By completing your purchase, you agree to our Terms of Service and Privacy Policy.</p>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </main>
