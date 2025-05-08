@@ -82,7 +82,7 @@ export default function ProductPage() {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: Number.parseFloat(product.price),
       quantity,
       image: getProductImages()[0] || "/placeholder.svg",
       category: category?.name || "Uncategorized",
@@ -200,7 +200,7 @@ export default function ProductPage() {
             {/* Details */}
             <div className="flex flex-col">
               <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
-              <div className="text-2xl font-bold mb-2">£{product.price.toFixed(2)}</div>
+              <div className="text-2xl font-bold mb-2">£{Number.parseFloat(product.price).toFixed(2)}</div>
 
               {/* Stock and Weight Information */}
               <div className="flex flex-col space-y-2 mb-6">
