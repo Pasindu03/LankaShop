@@ -1,4 +1,3 @@
-// app/api/create-checkout-session/route.ts
 import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -7,9 +6,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(request: Request) {
   try {
-    const { cartItems } = await request.json();
+    // Pull shippingCost (and cartItems) from the client
+    const { cartItems, shippingCost } = await request.json();
 
-    const line_items = cartItems.map((item: any) => ({
+    // Build your product line items
+    const itemLineItems = cartItems.map((item: any) => ({
       price_data: {
         currency: "GBP",
         product_data: {
@@ -24,12 +25,24 @@ export async function POST(request: Request) {
       quantity: item.quantity,
     }));
 
+    // Add shipping as its own line-item
+    const shippingLineItem = {
+      price_data: {
+        currency: "GBP",
+        product_data: {
+          name: "Shipping",
+        },
+        unit_amount: Math.round(shippingCost * 100),
+      },
+      quantity: 1,
+    };
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      line_items,
+      line_items: [...itemLineItems, shippingLineItem],
       mode: "payment",
       success_url: `${request.headers.get(
-        "origin"
+          "origin"
       )}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get("origin")}/checkout`,
     });
