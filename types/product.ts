@@ -9,6 +9,8 @@ export type Product = {
   date: string
   description: string
   stock: number
+  weight: number
+  weightUnit: string
   tagIds: string[]
 }
 

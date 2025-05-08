@@ -25,7 +25,7 @@ export default function CheckoutPage() {
 
         cartItems.forEach((item) => {
             if (item.weight && item.weightUnit) {
-                let itemWeightInGrams = Number.parseFloat(item.weight)
+                let itemWeightInGrams = item.weight
 
                 // Convert to grams based on unit
                 if (item.weightUnit === "kg") {

@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { FcGoogle } from "react-icons/fc"
-import {ChevronLeft} from "lucide-react";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("")
