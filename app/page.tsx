@@ -645,7 +645,7 @@ export default function Home() {
         </section>
 
         {/* Testimonials Section with Sri Lankan-inspired design */}
-        <section className="py-16 relative" style={{ background: "linear-gradient(to bottom, #1A1209, #2A1A0A)" }}>
+        <section className="py-16 relative bg-gradient-to-b from-[#1A1209] to-[#2A1A0A]">
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
                 initial="hidden"
@@ -654,7 +654,7 @@ export default function Home() {
                 variants={staggerContainer}
             >
               <motion.h2
-                  className="text-3xl font-serif text-center mb-4 text-[#D9A566]"
+                  className="text-3xl font-serif text-center mb-4 text-[#D9A566] "
                   variants={slideUp}
               >
                 What Our Customers Say
@@ -692,15 +692,8 @@ export default function Home() {
                     transition={{ duration: 0.5 }}
                 >
                   <Image
-                      src="https://ls-bucket12345.s3.us-east-1.amazonaws.com/logos/lankaShop.jpeg"
+                      src="/lankaShop.jpeg"
                       alt="Lanka Shop Logo"
-                      width={80}
-                      height={80}
-                      className="object-contain bg-white rounded-lg p-2 hover:shadow-lg transition-shadow duration-300"
-                  />
-                  <Image
-                      src="https://ls-bucket12345.s3.us-east-1.amazonaws.com/logos/IsuLogo.jpg"
-                      alt="Isu International"
                       width={80}
                       height={80}
                       className="object-contain bg-white rounded-lg p-2 hover:shadow-lg transition-shadow duration-300"

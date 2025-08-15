@@ -49,7 +49,7 @@ export default function TestimonialCarousel({ testimonials }: TestimonialCarouse
         >
           {testimonials.map((testimonial) => (
             <div key={testimonial.id} className="w-full flex-shrink-0 px-4">
-              <div className="bg-white p-6 md:p-8 rounded-lg shadow-md">
+              <div className="bg-[#1A1209] p-6 md:pb rounded-lg shadow-md">
                 <div className="flex items-center mb-4">
                   <div className="mr-4">
                     <Image
@@ -85,7 +85,7 @@ export default function TestimonialCarousel({ testimonials }: TestimonialCarouse
       <Button
         variant="outline"
         size="icon"
-        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
+        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-[#1A1209] backdrop-blur-sm hover:bg-[#1A1213]"
         onClick={prevSlide}
       >
         <ChevronLeft className="h-5 w-5" />
@@ -95,7 +95,7 @@ export default function TestimonialCarousel({ testimonials }: TestimonialCarouse
       <Button
         variant="outline"
         size="icon"
-        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
+        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-[#1A1209] backdrop-blur-sm hover:bg-[#1A1215]"
         onClick={nextSlide}
       >
         <ChevronRight className="h-5 w-5" />

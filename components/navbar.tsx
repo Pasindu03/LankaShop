@@ -98,9 +98,9 @@ export default function Navbar() {
                 <Image
                     src="/lankaShop.jpeg"
                     alt="Lanka Shop"
-                    width={50}
-                    height={50}
-                    className="object-contain h-12 w-auto sm:h-16 rounded-md border border-[#D9A566]/30"
+                    width={60}
+                    height={60}
+                    className="object-contain bg-white rounded-lg p-2 hover:shadow-lg transition-shadow duration-300"
                     priority
                 />
               </Link>
